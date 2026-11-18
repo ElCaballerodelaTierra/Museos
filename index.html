@@ -84,11 +84,14 @@
           <button class="chip active" data-category="all">Todos</button>
           <button class="chip" data-category="Arte">🎨 Arte</button>
           <button class="chip" data-category="Historia">📜 Historia</button>
+          <button class="chip" data-category="Arqueología">⛏️ Arqueología</button>
           <button class="chip" data-category="Antropología">🏺 Antropología</button>
           <button class="chip" data-category="Ciencia">🔬 Ciencia</button>
+          <button class="chip" data-category="Especializado">🏛️ Especializado</button>
           <button class="chip" data-category="Casas Museo">🏡 Casas Museo</button>
           <button class="chip" data-category="Cultura Popular">🎭 Cultura Popular</button>
           <button class="chip" data-category="Infantil">🎈 Infantil</button>
+          <button class="chip" data-category="Sin clasificar">📚 Sin clasificar</button>
         </div>
 
         <!-- Filtros secundarios: Alcaldía y Gratuidad -->
@@ -236,6 +239,11 @@
           </div>
         </div>
 
+        <section class="modal-sic-details" id="modalSicDetails" style="display: none;">
+          <h3>Información del catálogo SIC</h3>
+          <dl class="modal-sic-fields" id="modalSicFields"></dl>
+        </section>
+
         <div class="modal-footer-actions">
           <button class="btn btn-primary" id="btnFocusMapFromModal">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -271,6 +279,7 @@
   
   <!-- Datos de los museos -->
   <script src="data/museos.js"></script>
+  <script src="data/museos-sic.js"></script>
   
   <!-- Lógica de la aplicación -->
   <script src="app.js"></script>

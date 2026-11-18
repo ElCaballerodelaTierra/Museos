@@ -1110,6 +1110,51 @@ html, body {
   line-height: 1.4;
 }
 
+.modal-sic-details {
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.9rem;
+}
+
+.modal-sic-details h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.modal-sic-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.7rem 1rem;
+  margin: 0;
+}
+
+.modal-sic-fields > div {
+  min-width: 0;
+}
+
+.modal-sic-fields dt {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.modal-sic-fields dd {
+  margin: 0.15rem 0 0;
+  color: var(--text-main);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.modal-sic-fields a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.modal-sic-fields a:hover {
+  text-decoration: underline;
+}
+
 .modal-footer-actions {
   display: flex;
   gap: 0.75rem;

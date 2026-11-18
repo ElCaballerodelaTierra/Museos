@@ -28,11 +28,14 @@ const AppState = {
 const CATEGORY_META = {
   'Arte': { color: '#8b5cf6', icon: '🎨', cssClass: 'dot-arte' },
   'Historia': { color: '#d97706', icon: '📜', cssClass: 'dot-historia' },
+  'Arqueología': { color: '#b45309', icon: '⛏️', cssClass: 'dot-arqueologia' },
   'Antropología': { color: '#dc2626', icon: '🏺', cssClass: 'dot-antropologia' },
   'Ciencia': { color: '#0284c7', icon: '🔬', cssClass: 'dot-ciencia' },
   'Casas Museo': { color: '#059669', icon: '🏡', cssClass: 'dot-casas' },
   'Cultura Popular': { color: '#ea580c', icon: '🎭', cssClass: 'dot-cultura' },
-  'Infantil': { color: '#db2777', icon: '🎈', cssClass: 'dot-infantil' }
+  'Infantil': { color: '#db2777', icon: '🎈', cssClass: 'dot-infantil' },
+  'Especializado': { color: '#0f766e', icon: '🏛️', cssClass: 'dot-especializado' },
+  'Sin clasificar': { color: '#64748b', icon: '📚', cssClass: 'dot-sin-clasificar' }
 };
 
 // IDs verificados de las fichas del catálogo SIC Cultura
@@ -188,6 +191,8 @@ function initDOMReferences() {
   DOM.closeModalBtn = document.getElementById('closeModalBtn');
   DOM.modalImage = document.getElementById('modalImage');
   DOM.modalImageCredit = document.getElementById('modalImageCredit');
+  DOM.modalSicDetails = document.getElementById('modalSicDetails');
+  DOM.modalSicFields = document.getElementById('modalSicFields');
   DOM.modalCategory = document.getElementById('modalCategory');
   DOM.modalFreeBadge = document.getElementById('modalFreeBadge');
   DOM.modalTitle = document.getElementById('modalTitle');
@@ -273,20 +278,79 @@ function initMap() {
  * Carga los datos de museos y rellena el selector de alcaldías
  */
 function initData() {
-  if (typeof MUSEOS_DATA !== 'undefined' && Array.isArray(MUSEOS_DATA)) {
-    AppState.museos = MUSEOS_DATA.map(m => {
-      const sicId = SIC_IMAGE_IDS[m.id];
+  if (typeof SIC_MUSEOS_DATA !== 'undefined' && Array.isArray(SIC_MUSEOS_DATA) &&
+      typeof MUSEOS_DATA !== 'undefined' && Array.isArray(MUSEOS_DATA)) {
+    const curatedBySicId = new Map();
+    Object.entries(SIC_IMAGE_IDS).forEach(([museumId, sicId]) => {
+      const curated = MUSEOS_DATA.find(m => m.id === museumId);
+      if (curated) curatedBySicId.set(String(sicId), curated);
+    });
+
+    const sicMuseos = SIC_MUSEOS_DATA.map(source => {
+      const sicId = Number(source.museo_id);
+      const curated = curatedBySicId.get(String(sicId));
+      const theme = String(source.museo_tematica_n1 || '').trim();
+      const address = [
+        source.museo_calle_numero,
+        source.museo_colonia,
+        source.museo_cp
+      ].map(value => String(value || '').trim()).filter(Boolean).join(', ');
+      const topicDescription = theme ? `Temática registrada por SIC: ${theme}.` : '';
+      const sicWebsites = [
+        source.pagina_web,
+        source.pagina_web2,
+        source.pagina_web3
+      ].filter(isHttpUrl);
+      const sicInfo = {
+        theme,
+        foundationDate: source.museo_fecha_fundacion,
+        affiliation: source.museo_adscripcion,
+        propertyType: source.museo_tipo_de_propiedad,
+        phone: source.museo_telefono1,
+        email: source.email,
+        websites: sicWebsites,
+        facebook: source.facebook,
+        twitter: source.twitter,
+        instagram: source.instagram,
+        permanentRooms: source.museo_salas_exhibicion_c,
+        temporaryRooms: source.museo_salas_exhibicion_tmp_c,
+        updatedAt: source.fecha_mod
+      };
+
       return {
-        ...m,
-        imagenFallback: sicId ? m.imagen : '',
-        imagen: sicId
-          ? `https://sic.cultura.gob.mx/imgthumb/museo_${sicId}.png`
-          : m.imagen,
+        ...(curated || {}),
+        id: curated ? curated.id : `sic-${sicId}`,
+        sicId,
+        nombre: String(source.museo_nombre || (curated && curated.nombre) || '').trim(),
+        categoria: theme ? getSicCategory(theme) : (curated ? curated.categoria : 'Sin clasificar'),
+        alcaldia: String(source.nom_mun || (curated && curated.alcaldia) || '').trim(),
+        direccion: address || (curated && curated.direccion) || 'Dirección no disponible.',
+        coordenadas: [Number(source.gmaps_latitud), Number(source.gmaps_longitud)],
+        horario: (curated && curated.horario) || 'No publicado por SIC; consulta el recinto antes de tu visita.',
+        costo: (curated && curated.costo) || 'No publicado por SIC; consulta el recinto antes de tu visita.',
+        esGratis: curated ? curated.esGratis : false,
+        transporte: (curated && curated.transporte) || 'Consulta las rutas de transporte público disponibles.',
+        destacado: (curated && curated.destacado) || theme || 'Ficha registrada en el directorio SIC Cultura.',
+        descripcion: (curated && curated.descripcion) || topicDescription ||
+          'Ficha del directorio del Sistema de Información Cultural (SIC).',
+        imagen: `https://sic.cultura.gob.mx/imgthumb/museo_${sicId}.png`,
+        imagenFallback: curated ? curated.imagen : '',
+        sitioWeb: sicWebsites[0] || (curated && curated.sitioWeb) || '',
+        fuente: `https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=${sicId}`,
+        sicInfo,
         distance: null
       };
     });
+
+    const sicLegacyIds = new Set(Object.keys(SIC_IMAGE_IDS));
+    const extraMuseos = MUSEOS_DATA
+      .filter(m => !sicLegacyIds.has(m.id))
+      .map(m => ({ ...m, sicId: null, sicInfo: null, imagenFallback: '', distance: null }));
+    AppState.museos = [...sicMuseos, ...extraMuseos];
+  } else if (typeof MUSEOS_DATA !== 'undefined' && Array.isArray(MUSEOS_DATA)) {
+    AppState.museos = MUSEOS_DATA.map(m => ({ ...m, imagenFallback: '', distance: null }));
   } else {
-    console.error('No se encontró MUSEOS_DATA');
+    console.error('No se encontraron los datos de museos');
     AppState.museos = [];
   }
 
@@ -298,6 +362,32 @@ function initData() {
     opt.textContent = `Alcaldía ${alc}`;
     DOM.alcaldiaSelect.appendChild(opt);
   });
+}
+
+function getSicCategory(theme) {
+  const categories = {
+    'Arte': 'Arte',
+    'Historia': 'Historia',
+    'Arqueología': 'Arqueología',
+    'Antropología': 'Antropología',
+    'Ciencia y tecnología': 'Ciencia',
+    'Especializado': 'Especializado'
+  };
+  return categories[theme] || 'Sin clasificar';
+}
+
+function isHttpUrl(value) {
+  return typeof value === 'string' && /^https?:\/\//i.test(value.trim());
+}
+
+function escapeHtml(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[character]);
 }
 
 function handleMuseumImageError(image) {
@@ -496,8 +586,13 @@ function applyFiltersAndRender() {
 
     // Búsqueda de texto
     if (normQuery) {
+      const sicSearchText = museo.sicInfo
+        ? Object.values(museo.sicInfo)
+            .map(value => Array.isArray(value) ? value.join(' ') : String(value || ''))
+            .join(' ')
+        : '';
       const combined = normalizeText(
-        `${museo.nombre} ${museo.alcaldia} ${museo.direccion} ${museo.descripcion} ${museo.destacado} ${museo.categoria}`
+        `${museo.nombre} ${museo.alcaldia} ${museo.direccion} ${museo.descripcion} ${museo.destacado} ${museo.categoria} ${sicSearchText}`
       );
       if (!combined.includes(normQuery)) {
         return false;
@@ -594,18 +689,24 @@ function buildPopupContent(museo) {
   const freeBadgeHtml = museo.esGratis 
     ? `<span class="badge badge-free">Entrada Libre</span>` 
     : '';
+  const image = escapeHtml(museo.imagen);
+  const imageFallback = escapeHtml(museo.imagenFallback);
+  const name = escapeHtml(museo.nombre);
+  const category = escapeHtml(museo.categoria);
+  const alcaldia = escapeHtml(museo.alcaldia);
+  const horario = escapeHtml(museo.horario);
 
   return `
     <div class="popup-container">
-      <img src="${museo.imagen}" data-fallback="${museo.imagenFallback}" alt="${museo.nombre}" class="popup-header-img" onerror="handleMuseumImageError(this)">
+      <img src="${image}" data-fallback="${imageFallback}" alt="${name}" class="popup-header-img" onerror="handleMuseumImageError(this)">
       <div class="popup-body">
         <div class="popup-badge-row">
-          <span class="badge badge-category" style="background-color: ${meta.color}">${museo.categoria}</span>
+          <span class="badge badge-category" style="background-color: ${meta.color}">${category}</span>
           ${freeBadgeHtml}
         </div>
-        <h4 class="popup-title">${museo.nombre}</h4>
-        <p class="popup-address">📍 ${museo.alcaldia}</p>
-        <p class="popup-schedule">🕒 ${museo.horario}</p>
+        <h4 class="popup-title">${name}</h4>
+        <p class="popup-address">📍 ${alcaldia}</p>
+        <p class="popup-schedule">🕒 ${horario}</p>
         <div class="popup-actions">
           <button class="btn btn-primary popup-btn" onclick="openDetailsModal('${museo.id}')">
             Ver Detalles
@@ -638,6 +739,13 @@ function renderMuseumsList(museos) {
     const isSelected = museo.id === AppState.selectedId;
     const isFavorited = AppState.favorites.has(museo.id);
     const meta = CATEGORY_META[museo.categoria] || { color: '#64748b' };
+    const image = escapeHtml(museo.imagen);
+    const imageFallback = escapeHtml(museo.imagenFallback);
+    const name = escapeHtml(museo.nombre);
+    const category = escapeHtml(museo.categoria);
+    const alcaldia = escapeHtml(museo.alcaldia);
+    const address = escapeHtml(museo.direccion.split(',')[0]);
+    const highlight = escapeHtml(museo.destacado);
 
     const card = document.createElement('article');
     card.className = `museum-card ${isSelected ? 'selected' : ''}`;
@@ -652,9 +760,9 @@ function renderMuseumsList(museos) {
     card.innerHTML = `
       <div class="card-thumb-wrapper">
         <img 
-          src="${museo.imagen}" 
-          data-fallback="${museo.imagenFallback}"
-          alt="${museo.nombre}" 
+          src="${image}" 
+          data-fallback="${imageFallback}"
+          alt="${name}" 
           class="card-thumb" 
           loading="lazy"
           onerror="handleMuseumImageError(this)"
@@ -671,14 +779,14 @@ function renderMuseumsList(museos) {
       <div class="card-content">
         <div>
           <div class="card-header-tags">
-            <span class="badge badge-category" style="background-color: ${meta.color}">${museo.categoria}</span>
+            <span class="badge badge-category" style="background-color: ${meta.color}">${category}</span>
             ${museo.esGratis ? '<span class="badge badge-free">Gratis</span>' : ''}
             ${distanceBadge}
           </div>
-          <h3 class="card-title" title="${museo.nombre}">${museo.nombre}</h3>
-          <p class="card-alcaldia">📍 ${museo.alcaldia} · ${museo.direccion.split(',')[0]}</p>
-          <div class="card-highlight" title="${museo.destacado}">
-            ⭐ <strong>Destacado:</strong> ${museo.destacado}
+          <h3 class="card-title" title="${name}">${name}</h3>
+          <p class="card-alcaldia">📍 ${alcaldia} · ${address}</p>
+          <div class="card-highlight" title="${highlight}">
+            ⭐ <strong>Destacado:</strong> ${highlight}
           </div>
         </div>
 
@@ -798,13 +906,14 @@ function openDetailsModal(id) {
   DOM.modalCost.textContent = museo.costo;
   DOM.modalTransport.textContent = museo.transporte;
   DOM.modalAddress.textContent = museo.direccion;
+  renderSicDetails(museo);
 
   // Enlace a Google Maps para navegación
   const [lat, lng] = museo.coordenadas;
   DOM.btnGoogleMapsNav.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 
   // Sitio web o ficha de referencia
-  const sicId = SIC_IMAGE_IDS[museo.id];
+  const sicId = museo.sicId || SIC_IMAGE_IDS[museo.id];
   const sicFichaUrl = sicId
     ? `https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=${sicId}`
     : '';
@@ -824,6 +933,87 @@ function openDetailsModal(id) {
   }
 
   DOM.modal.style.display = 'flex';
+}
+
+function renderSicDetails(museo) {
+  DOM.modalSicFields.innerHTML = '';
+  const info = museo.sicInfo;
+  if (!info) {
+    DOM.modalSicDetails.style.display = 'none';
+    return;
+  }
+
+  const addItem = (label, value, links = []) => {
+    const text = String(value == null ? '' : value).trim();
+    if (!text && links.length === 0) return;
+
+    const item = document.createElement('div');
+    const term = document.createElement('dt');
+    const description = document.createElement('dd');
+    term.textContent = label;
+
+    if (links.length > 0) {
+      links.forEach((link, index) => {
+        if (index > 0) description.appendChild(document.createTextNode(' · '));
+        const anchor = document.createElement('a');
+        anchor.href = link.href;
+        anchor.target = '_blank';
+        anchor.rel = 'noopener noreferrer';
+        anchor.textContent = link.label;
+        description.appendChild(anchor);
+      });
+    } else {
+      description.textContent = text;
+    }
+
+    item.appendChild(term);
+    item.appendChild(description);
+    DOM.modalSicFields.appendChild(item);
+  };
+
+  const formatSicDate = value => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ''));
+    if (!match || Number(match[1]) <= 1000) return '';
+    return `${match[3]}/${match[2]}/${match[1]}`;
+  };
+
+  const cleanValue = value => {
+    const text = String(value == null ? '' : value).trim();
+    return /^(tnd|tpnd|null|0)$/i.test(text) ? '' : text;
+  };
+
+  addItem('Temática', cleanValue(info.theme));
+  addItem('Fundación', formatSicDate(info.foundationDate));
+  addItem('Adscripción', cleanValue(info.affiliation));
+  addItem('Tipo de propiedad', cleanValue(info.propertyType));
+
+  const roomCounts = [];
+  const permanentRooms = Number(info.permanentRooms);
+  const temporaryRooms = Number(info.temporaryRooms);
+  if (Number.isFinite(permanentRooms) && permanentRooms >= 0) {
+    roomCounts.push(`${permanentRooms} permanentes`);
+  }
+  if (Number.isFinite(temporaryRooms) && temporaryRooms >= 0) {
+    roomCounts.push(`${temporaryRooms} temporales`);
+  }
+  addItem('Salas de exhibición', roomCounts.join(' · '));
+  addItem('Teléfono', cleanValue(info.phone));
+  addItem('Correo', cleanValue(info.email));
+
+  const otherWebsites = (info.websites || [])
+    .filter(url => isHttpUrl(url) && url !== museo.sitioWeb)
+    .map((url, index) => ({ label: `Sitio ${index + 2}`, href: url }));
+  addItem('Otros sitios', '', otherWebsites);
+
+  const socialLinks = [
+    { label: 'Facebook', href: info.facebook },
+    { label: 'X / Twitter', href: info.twitter },
+    { label: 'Instagram', href: info.instagram }
+  ].filter(link => isHttpUrl(link.href));
+  addItem('Redes sociales', '', socialLinks);
+  addItem('Actualización SIC', formatSicDate(info.updatedAt));
+
+  DOM.modalSicDetails.style.display = DOM.modalSicFields.children.length ? 'block' : 'none';
 }
 
 /**
