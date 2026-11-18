@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Museos de la Ciudad de México | Mapa Interactivo</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header principal -->
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="logo-icon">🏛️</div>
+      <div>
+        <h1 class="app-title">Museos de la Ciudad de México</h1>
+        <p class="app-subtitle">Explora la riqueza cultural y artística en el mapa interactivo</p>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <div class="stats-badge" id="statsBadge">
+        <span class="stats-count" id="visibleCount">0</span>
+        <span class="stats-label">museos visibles</span>
+      </div>
+      
+      <button class="btn btn-outline" id="btnNearMe" title="Calcular museos más cercanos">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+        </svg>
+        <span>Cerca de mí</span>
+      </button>
+
+      <button class="btn btn-outline" id="btnFavorites" title="Ver museos favoritos guardados">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+        <span id="favLabel">Favoritos (<span id="favCount">0</span>)</span>
+      </button>
+
+      <!-- Botón de alternancia en móviles -->
+      <div class="mobile-view-toggle" id="mobileViewToggle">
+        <button class="toggle-btn active" data-view="sidebar">Lista</button>
+        <button class="toggle-btn" data-view="map">Mapa</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenedor principal de dos columnas -->
+  <main class="app-container">
+    <!-- Columna Izquierda: Buscador, Filtros y Lista de Museos -->
+    <aside class="sidebar" id="sidebar">
+      <!-- Barra de búsqueda y filtros -->
+      <div class="search-section">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Buscar por nombre, artista, colonia o palabra clave..." 
+            autocomplete="off"
+          />
+          <button id="clearSearchBtn" class="clear-btn" style="display: none;" title="Limpiar búsqueda">&times;</button>
+        </div>
+
+        <!-- Filtros rápidos por Categoría -->
+        <div class="categories-scroll" id="categoryChips">
+          <button class="chip active" data-category="all">Todos</button>
+          <button class="chip" data-category="Arte">🎨 Arte</button>
+          <button class="chip" data-category="Historia">📜 Historia</button>
+          <button class="chip" data-category="Antropología">🏺 Antropología</button>
+          <button class="chip" data-category="Ciencia">🔬 Ciencia</button>
+          <button class="chip" data-category="Casas Museo">🏡 Casas Museo</button>
+          <button class="chip" data-category="Cultura Popular">🎭 Cultura Popular</button>
+          <button class="chip" data-category="Infantil">🎈 Infantil</button>
+        </div>
+
+        <!-- Filtros secundarios: Alcaldía y Gratuidad -->
+        <div class="secondary-filters">
+          <div class="filter-group">
+            <label for="alcaldiaSelect">Alcaldía:</label>
+            <select id="alcaldiaSelect" class="form-select">
+              <option value="all">Todas las alcaldías</option>
+              <!-- Las opciones se generarán dinámicamente -->
+            </select>
+          </div>
+
+          <label class="checkbox-container">
+            <input type="checkbox" id="onlyFreeCheckbox">
+            <span class="checkmark"></span>
+            <span class="checkbox-label">Solo entrada libre 🟢</span>
+          </label>
+        </div>
+
+        <!-- Barra de estado y ordenamiento -->
+        <div class="list-controls">
+          <span class="results-feedback" id="resultsFeedback">Cargando museos...</span>
+          <div class="sort-wrapper">
+            <label for="sortSelect">Ordenar:</label>
+            <select id="sortSelect" class="sort-select">
+              <option value="popular">Recomendados</option>
+              <option value="name-asc">Nombre (A - Z)</option>
+              <option value="name-desc">Nombre (Z - A)</option>
+              <option value="distance" disabled id="sortDistanceOption">Proximidad (cercanía)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista con scroll de tarjetas de museos -->
+      <div class="museums-list" id="museumsList">
+        <!-- Tarjetas dinámicas inyectadas por JS -->
+      </div>
+    </aside>
+
+    <!-- Columna Derecha: Mapa Interactivo -->
+    <section class="map-wrapper" id="mapWrapper">
+      <div id="map"></div>
+
+      <!-- Controles flotantes sobre el mapa -->
+      <div class="map-floating-controls">
+        <button class="map-ctrl-btn" id="btnResetMap" title="Centrar mapa en CDMX">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+          <span class="ctrl-tooltip">Centrar mapa</span>
+        </button>
+
+        <div class="map-layer-selector">
+          <button class="map-ctrl-btn" id="btnLayerToggle" title="Cambiar estilo de mapa">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
+            <span class="ctrl-tooltip">Estilo del mapa</span>
+          </button>
+          <div class="layer-dropdown" id="layerDropdown">
+            <button class="layer-option active" data-layer="osm">OpenStreetMap</button>
+            <button class="layer-option" data-layer="topo">Topográfico</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leyenda rápida del mapa -->
+      <div class="map-legend">
+        <div class="legend-item"><span class="legend-dot dot-arte"></span> Arte</div>
+        <div class="legend-item"><span class="legend-dot dot-historia"></span> Historia</div>
+        <div class="legend-item"><span class="legend-dot dot-antropologia"></span> Antropología</div>
+        <div class="legend-item"><span class="legend-dot dot-ciencia"></span> Ciencia</div>
+        <div class="legend-item"><span class="legend-dot dot-casas"></span> Casas Museo</div>
+        <div class="legend-item"><span class="legend-dot dot-cultura"></span> Popular</div>
+        <div class="legend-item"><span class="legend-dot dot-infantil"></span> Infantil</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal de Detalle Completo del Museo -->
+  <div class="modal-overlay" id="museumModal" style="display: none;">
+    <div class="modal-card">
+      <button class="modal-close-btn" id="closeModalBtn" aria-label="Cerrar ventana">&times;</button>
+      
+      <div class="modal-header-image" id="modalImageContainer">
+        <img id="modalImage" src="" alt="Foto del museo" loading="lazy">
+        <div class="modal-badge-wrapper">
+          <span class="category-badge" id="modalCategory">Arte</span>
+          <span class="free-badge" id="modalFreeBadge">Entrada Libre</span>
+        </div>
+        <a class="modal-image-credit" id="modalImageCredit" href="#" target="_blank" rel="noopener noreferrer" style="display: none;">
+          Imagen: SIC Cultura
+        </a>
+      </div>
+      
+      <div class="modal-body">
+        <h2 class="modal-title" id="modalTitle">Nombre del Museo</h2>
+        <p class="modal-alcaldia" id="modalAlcaldia">📍 Miguel Hidalgo, CDMX</p>
+        
+        <p class="modal-description" id="modalDescription"></p>
+
+        <div class="modal-highlight-box">
+          <span class="highlight-icon">⭐</span>
+          <div>
+            <strong>Imperdible:</strong>
+            <p id="modalHighlight" style="margin: 0;"></p>
+          </div>
+        </div>
+
+        <div class="modal-info-grid">
+          <div class="info-item">
+            <div class="info-icon">🕒</div>
+            <div>
+              <strong>Horario</strong>
+              <p id="modalSchedule"></p>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-icon">🎟️</div>
+            <div>
+              <strong>Costo</strong>
+              <p id="modalCost"></p>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-icon">🚇</div>
+            <div>
+              <strong>Transporte Cercano</strong>
+              <p id="modalTransport"></p>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-icon">📍</div>
+            <div>
+              <strong>Dirección</strong>
+              <p id="modalAddress"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer-actions">
+          <button class="btn btn-primary" id="btnFocusMapFromModal">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+              <line x1="8" y1="2" x2="8" y2="18"></line>
+              <line x1="16" y1="6" x2="16" y2="22"></line>
+            </svg>
+            Ver en el Mapa
+          </button>
+
+          <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="btnGoogleMapsNav">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+            Cómo Llegar (Google Maps)
+          </a>
+
+          <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-ghost" id="btnOfficialWeb">
+            Más información &rarr;
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast de notificación -->
+  <div class="toast" id="toastNotification" style="display: none;"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <!-- Datos de los museos -->
+  <script src="data/museos.js"></script>
+  
+  <!-- Lógica de la aplicación -->
+  <script src="app.js"></script>
+</body>
+</html>

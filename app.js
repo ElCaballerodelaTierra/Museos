@@ -1,0 +1,1021 @@
+/**
+ * Aplicación de Museos de la Ciudad de México
+ * Mapa interactivo con Leaflet y sincronización bidireccional lista <-> mapa
+ */
+
+// Estado global de la aplicación
+const AppState = {
+  museos: [],
+  filteredMuseos: [],
+  selectedId: null,
+  activeCategory: 'all',
+  activeAlcaldia: 'all',
+  onlyFree: false,
+  searchQuery: '',
+  sortOrder: 'popular',
+  showOnlyFavorites: false,
+  userCoords: null,
+  favorites: new Set(),
+  markersMap: new Map(), // id -> L.Marker
+  map: null,
+  markersLayer: null,
+  userMarker: null,
+  baseTileLayers: {},
+  currentBaseLayer: null
+};
+
+// Mapeo de categorías con colores e iconos
+const CATEGORY_META = {
+  'Arte': { color: '#8b5cf6', icon: '🎨', cssClass: 'dot-arte' },
+  'Historia': { color: '#d97706', icon: '📜', cssClass: 'dot-historia' },
+  'Antropología': { color: '#dc2626', icon: '🏺', cssClass: 'dot-antropologia' },
+  'Ciencia': { color: '#0284c7', icon: '🔬', cssClass: 'dot-ciencia' },
+  'Casas Museo': { color: '#059669', icon: '🏡', cssClass: 'dot-casas' },
+  'Cultura Popular': { color: '#ea580c', icon: '🎭', cssClass: 'dot-cultura' },
+  'Infantil': { color: '#db2777', icon: '🎈', cssClass: 'dot-infantil' }
+};
+
+// IDs verificados de las fichas del catálogo SIC Cultura
+const SIC_IMAGE_IDS = {
+  antropologia: 807,
+  'bellas-artes': 1080,
+  'soumaya-carso': 1478,
+  'frida-kahlo': 287,
+  'castillo-chapultepec': 673,
+  'templo-mayor': 476,
+  munal: 439,
+  tamayo: 335,
+  mam: 658,
+  papalote: 375,
+  universum: 449,
+  muac: 1224,
+  'memoria-tolerancia': 1313,
+  'franz-mayer': 462,
+  anahuacalli: 442,
+  jumex: 1484,
+  'ciudad-mexico': 797,
+  'estudio-diego-frida': 805,
+  modo: 1469,
+  'dolores-olmedo': 916,
+  mide: 1096,
+  'culturas-populares': 976,
+  'san-carlos': 804,
+  'ex-teresa': 771,
+  geologia: 692,
+  'san-ildefonso': 768,
+  estanquillo: 1105,
+  'polyforum-siqueiros': 532,
+  'casa-de-la-bola': 548,
+  'chocolate-mucho': 1532,
+  'casa-trotsky': 966,
+  'palacio-correos': 689,
+  'laboratorio-arte-alameda': 427,
+  revolucion: 705,
+  'el-carmen': 963,
+  intervenciones: 978,
+  kaluz: 2066,
+  map: 1092,
+  'tovar-teresa': 2069,
+  'historia-natural': 238,
+  'planetario-erro': 537,
+  yancuik: 2385,
+  'culturas-mundo': 802,
+  'archivo-fotografia': 1109,
+  'panteon-san-fernando': 1176,
+  'cera-ripley': 43,
+  'museo-perfume': 2190,
+  'museo-universitario-chopo': 382,
+  'museo-mujer': 1435,
+  munae: 812,
+  'museo-acuarela': 789,
+  'museo-arte-carrillo-gil': 794,
+  'casa-carranza': 965,
+  'palacio-escuela-medicina': 691,
+  'memorial-68-m68': 1600,
+  'museo-sitio-cuicuilco': 721,
+  'museo-sitio-mixcoac': 2156,
+  mujam: 1106,
+  'museo-ferrocarrileros': 1285,
+  'museo-basilica-guadalupe': 728,
+  'casa-memoria-indomita': 1538,
+  'museo-numismatico': 1337,
+  'museo-metro': 1905,
+  'museo-historia-tlalpan': 546,
+  'museo-caracol': 970,
+  'centro-comunitario-culhuacan': 971,
+  'caja-agua-tlatelolco': 1491,
+  'museo-arte-shcp': 968,
+  'casa-estudio-luis-barragan': 478,
+  'museo-tezozomoc': 1233,
+  'pabellon-biodiversidad': 2205,
+  'casa-del-risco': 855,
+  'soumaya-loreto': 730,
+  axolotitlan: 2237,
+  'museo-pulque': 2110,
+  'museo-constituciones': 1516,
+  'museo-mural-diego-rivera': 661,
+  'museo-cancilleria': 1519,
+  'museo-telegrafo': 907,
+  'museo-banco-mexico': 2202,
+  'centro-imagen': 2075,
+  'museo-experimental-el-eco': 344,
+  'sala-arte-publico-siqueiros': 786,
+  'museo-geofisica': 1614,
+  anfibium: 2311,
+  cencalli: 2194,
+  'museo-radio-metro': 2475,
+  'museo-fuego-nuevo': 910,
+  'museo-arqueologico-xochimilco': 917,
+  'museo-regional-cuitlahuac': 738,
+  'museo-azcapotzalco': 727,
+  'museo-casa-kahlo': 2541,
+  munavi: 2322,
+  'museo-barco-utopia': 2256,
+  'planetario-katya-echazarreta': 2386,
+  'museo-culturas-pasion-iztapalapa': 1535,
+  'museo-transportes-electricos': 1877,
+  'museo-regional-altepepialcalli': 535,
+  'museo-cuartel-zapatista': 915,
+  'museo-geologia-paleontologia-ipn': 908,
+  'casa-fuerte-indio-fernandez': 2384
+};
+
+const FALLBACK_IMAGE_URL = 'https://images.unsplash.com/photo-1518638150340-f706e86654de?w=600&q=80';
+
+// Coordenadas centrales por defecto de la Ciudad de México
+const CDMX_CENTER = [19.4326, -99.1332];
+const DEFAULT_ZOOM = 12;
+
+// Elementos DOM frecuentemente usados
+const DOM = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+  initDOMReferences();
+  loadFavoritesFromStorage();
+  initMap();
+  initData();
+  initEventHandlers();
+  applyFiltersAndRender();
+});
+
+/**
+ * Guarda las referencias a los elementos del DOM
+ */
+function initDOMReferences() {
+  DOM.sidebar = document.getElementById('sidebar');
+  DOM.museumsList = document.getElementById('museumsList');
+  DOM.searchInput = document.getElementById('searchInput');
+  DOM.clearSearchBtn = document.getElementById('clearSearchBtn');
+  DOM.categoryChips = document.getElementById('categoryChips');
+  DOM.alcaldiaSelect = document.getElementById('alcaldiaSelect');
+  DOM.onlyFreeCheckbox = document.getElementById('onlyFreeCheckbox');
+  DOM.sortSelect = document.getElementById('sortSelect');
+  DOM.sortDistanceOption = document.getElementById('sortDistanceOption');
+  DOM.visibleCount = document.getElementById('visibleCount');
+  DOM.resultsFeedback = document.getElementById('resultsFeedback');
+  DOM.btnNearMe = document.getElementById('btnNearMe');
+  DOM.btnFavorites = document.getElementById('btnFavorites');
+  DOM.favCount = document.getElementById('favCount');
+  DOM.favLabel = document.getElementById('favLabel');
+  DOM.btnResetMap = document.getElementById('btnResetMap');
+  DOM.btnLayerToggle = document.getElementById('btnLayerToggle');
+  DOM.layerDropdown = document.getElementById('layerDropdown');
+  DOM.mobileViewToggle = document.getElementById('mobileViewToggle');
+  DOM.toast = document.getElementById('toastNotification');
+  
+  // Modal DOM
+  DOM.modal = document.getElementById('museumModal');
+  DOM.closeModalBtn = document.getElementById('closeModalBtn');
+  DOM.modalImage = document.getElementById('modalImage');
+  DOM.modalImageCredit = document.getElementById('modalImageCredit');
+  DOM.modalCategory = document.getElementById('modalCategory');
+  DOM.modalFreeBadge = document.getElementById('modalFreeBadge');
+  DOM.modalTitle = document.getElementById('modalTitle');
+  DOM.modalAlcaldia = document.getElementById('modalAlcaldia');
+  DOM.modalDescription = document.getElementById('modalDescription');
+  DOM.modalHighlight = document.getElementById('modalHighlight');
+  DOM.modalSchedule = document.getElementById('modalSchedule');
+  DOM.modalCost = document.getElementById('modalCost');
+  DOM.modalTransport = document.getElementById('modalTransport');
+  DOM.modalAddress = document.getElementById('modalAddress');
+  DOM.btnFocusMapFromModal = document.getElementById('btnFocusMapFromModal');
+  DOM.btnGoogleMapsNav = document.getElementById('btnGoogleMapsNav');
+  DOM.btnOfficialWeb = document.getElementById('btnOfficialWeb');
+}
+
+/**
+ * Carga favoritos desde LocalStorage
+ */
+function loadFavoritesFromStorage() {
+  try {
+    const saved = localStorage.getItem('museos_cdmx_favs');
+    if (saved) {
+      const arr = JSON.parse(saved);
+      AppState.favorites = new Set(arr);
+    }
+  } catch (e) {
+    console.warn('No se pudo acceder a localStorage:', e);
+  }
+  updateFavoritesBadge();
+}
+
+/**
+ * Guarda favoritos en LocalStorage
+ */
+function saveFavoritesToStorage() {
+  try {
+    localStorage.setItem('museos_cdmx_favs', JSON.stringify([...AppState.favorites]));
+  } catch (e) {
+    console.warn('Error al guardar favoritos:', e);
+  }
+  updateFavoritesBadge();
+}
+
+function updateFavoritesBadge() {
+  const count = AppState.favorites.size;
+  DOM.favCount.textContent = count;
+}
+
+/**
+ * Inicializa el mapa Leaflet con capas personalizadas
+ */
+function initMap() {
+  AppState.map = L.map('map', {
+    center: CDMX_CENTER,
+    zoom: DEFAULT_ZOOM,
+    zoomControl: false // Lo reubicaremos
+  });
+
+  // Reubicar zoom control a la esquina superior izquierda
+  L.control.zoom({ position: 'topleft' }).addTo(AppState.map);
+
+  // Definir diferentes estilos de mapas
+  AppState.baseTileLayers = {
+    osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
+    }),
+    topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
+      maxZoom: 17
+    })
+  };
+
+  // Capa inicial
+  AppState.currentBaseLayer = AppState.baseTileLayers.osm;
+  AppState.currentBaseLayer.addTo(AppState.map);
+
+  // Capa para marcadores
+  AppState.markersLayer = L.layerGroup().addTo(AppState.map);
+}
+
+/**
+ * Carga los datos de museos y rellena el selector de alcaldías
+ */
+function initData() {
+  if (typeof MUSEOS_DATA !== 'undefined' && Array.isArray(MUSEOS_DATA)) {
+    AppState.museos = MUSEOS_DATA.map(m => {
+      const sicId = SIC_IMAGE_IDS[m.id];
+      return {
+        ...m,
+        imagenFallback: sicId ? m.imagen : '',
+        imagen: sicId
+          ? `https://sic.cultura.gob.mx/imgthumb/museo_${sicId}.png`
+          : m.imagen,
+        distance: null
+      };
+    });
+  } else {
+    console.error('No se encontró MUSEOS_DATA');
+    AppState.museos = [];
+  }
+
+  // Poblar opciones de alcaldía ordenadas alfabéticamente
+  const alcaldias = [...new Set(AppState.museos.map(m => m.alcaldia))].sort();
+  alcaldias.forEach(alc => {
+    const opt = document.createElement('option');
+    opt.value = alc;
+    opt.textContent = `Alcaldía ${alc}`;
+    DOM.alcaldiaSelect.appendChild(opt);
+  });
+}
+
+function handleMuseumImageError(image) {
+  const fallback = image.dataset.fallback;
+  if (fallback) {
+    image.dataset.fallback = '';
+    image.src = fallback;
+    return;
+  }
+
+  image.onerror = null;
+  image.src = FALLBACK_IMAGE_URL;
+}
+
+/**
+ * Configura los escuchadores de eventos
+ */
+function initEventHandlers() {
+  // Búsqueda de texto instantánea
+  DOM.searchInput.addEventListener('input', (e) => {
+    AppState.searchQuery = e.target.value.trim().toLowerCase();
+    DOM.clearSearchBtn.style.display = AppState.searchQuery ? 'block' : 'none';
+    applyFiltersAndRender();
+  });
+
+  DOM.clearSearchBtn.addEventListener('click', () => {
+    DOM.searchInput.value = '';
+    AppState.searchQuery = '';
+    DOM.clearSearchBtn.style.display = 'none';
+    DOM.searchInput.focus();
+    applyFiltersAndRender();
+  });
+
+  // Filtro por categoría (chips)
+  DOM.categoryChips.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    
+    AppState.activeCategory = chip.dataset.category;
+    applyFiltersAndRender();
+  });
+
+  // Filtro por alcaldía
+  DOM.alcaldiaSelect.addEventListener('change', (e) => {
+    AppState.activeAlcaldia = e.target.value;
+    applyFiltersAndRender();
+  });
+
+  // Filtro de solo entrada libre
+  DOM.onlyFreeCheckbox.addEventListener('change', (e) => {
+    AppState.onlyFree = e.target.checked;
+    applyFiltersAndRender();
+  });
+
+  // Ordenamiento
+  DOM.sortSelect.addEventListener('change', (e) => {
+    AppState.sortOrder = e.target.value;
+    applyFiltersAndRender();
+  });
+
+  // Botón "Cerca de mí" (Geolocalización)
+  DOM.btnNearMe.addEventListener('click', handleUserGeolocation);
+
+  // Botón de Favoritos
+  DOM.btnFavorites.addEventListener('click', () => {
+    AppState.showOnlyFavorites = !AppState.showOnlyFavorites;
+    if (AppState.showOnlyFavorites) {
+      DOM.btnFavorites.classList.add('active');
+      showToast('Mostrando solo tus museos favoritos ❤️');
+    } else {
+      DOM.btnFavorites.classList.remove('active');
+      showToast('Mostrando todos los museos');
+    }
+    applyFiltersAndRender();
+  });
+
+  // Centrar mapa
+  DOM.btnResetMap.addEventListener('click', () => {
+    fitMapToMarkers();
+  });
+
+  // Toggle de capas del mapa
+  DOM.btnLayerToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    DOM.layerDropdown.classList.toggle('show');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!DOM.layerDropdown.contains(e.target) && e.target !== DOM.btnLayerToggle) {
+      DOM.layerDropdown.classList.remove('show');
+    }
+  });
+
+  DOM.layerDropdown.addEventListener('click', (e) => {
+    const opt = e.target.closest('.layer-option');
+    if (!opt) return;
+    
+    const layerKey = opt.dataset.layer;
+    if (AppState.baseTileLayers[layerKey]) {
+      AppState.map.removeLayer(AppState.currentBaseLayer);
+      AppState.currentBaseLayer = AppState.baseTileLayers[layerKey];
+      AppState.currentBaseLayer.addTo(AppState.map);
+      
+      document.querySelectorAll('.layer-option').forEach(btn => btn.classList.remove('active'));
+      opt.classList.add('active');
+      DOM.layerDropdown.classList.remove('show');
+      showToast(`Capa de mapa cambiada: ${opt.textContent}`);
+    }
+  });
+
+  // Alternancia en vista móvil
+  DOM.mobileViewToggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('.toggle-btn');
+    if (!btn) return;
+    
+    const view = btn.dataset.view;
+    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    if (view === 'map') {
+      document.body.classList.add('view-map');
+      document.body.classList.remove('view-sidebar');
+      setTimeout(() => {
+        AppState.map.invalidateSize();
+      }, 300);
+    } else {
+      document.body.classList.add('view-sidebar');
+      document.body.classList.remove('view-map');
+    }
+  });
+
+  // Cerrar modal
+  DOM.closeModalBtn.addEventListener('click', closeModal);
+  DOM.modal.addEventListener('click', (e) => {
+    if (e.target === DOM.modal) closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && DOM.modal.style.display !== 'none') {
+      closeModal();
+    }
+  });
+
+  // Botón del modal "Ver en el Mapa"
+  DOM.btnFocusMapFromModal.addEventListener('click', () => {
+    if (AppState.selectedId) {
+      const museo = AppState.museos.find(m => m.id === AppState.selectedId);
+      closeModal();
+      if (museo) {
+        focusMuseumOnMap(museo);
+      }
+      // En móvil, cambiar automáticamente a vista de mapa
+      switchToMapViewIfMobile();
+    }
+  });
+}
+
+/**
+ * Normaliza cadenas para búsqueda insensible a acentos
+ */
+function normalizeText(text) {
+  return (text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+/**
+ * Aplica todos los filtros actuales y renderiza la lista y los marcadores
+ */
+function applyFiltersAndRender() {
+  const normQuery = normalizeText(AppState.searchQuery);
+
+  let result = AppState.museos.filter(museo => {
+    // Filtro por categoría
+    if (AppState.activeCategory !== 'all' && museo.categoria !== AppState.activeCategory) {
+      return false;
+    }
+
+    // Filtro por alcaldía
+    if (AppState.activeAlcaldia !== 'all' && museo.alcaldia !== AppState.activeAlcaldia) {
+      return false;
+    }
+
+    // Filtro de solo entrada libre
+    if (AppState.onlyFree && !museo.esGratis) {
+      return false;
+    }
+
+    // Filtro de solo favoritos
+    if (AppState.showOnlyFavorites && !AppState.favorites.has(museo.id)) {
+      return false;
+    }
+
+    // Búsqueda de texto
+    if (normQuery) {
+      const combined = normalizeText(
+        `${museo.nombre} ${museo.alcaldia} ${museo.direccion} ${museo.descripcion} ${museo.destacado} ${museo.categoria}`
+      );
+      if (!combined.includes(normQuery)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  // Ordenamiento
+  result = sortMuseums(result, AppState.sortOrder);
+
+  AppState.filteredMuseos = result;
+
+  // Actualizar contador y feedback
+  DOM.visibleCount.textContent = result.length;
+  DOM.resultsFeedback.textContent = `${result.length} ${result.length === 1 ? 'museo encontrado' : 'museos encontrados'}`;
+
+  // Renderizar componentes
+  renderMuseumsList(result);
+  renderMapMarkers(result);
+}
+
+/**
+ * Ordena la lista de museos según el criterio seleccionado
+ */
+function sortMuseums(list, order) {
+  const copy = [...list];
+  switch (order) {
+    case 'name-asc':
+      return copy.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    case 'name-desc':
+      return copy.sort((a, b) => b.nombre.localeCompare(a.nombre, 'es'));
+    case 'distance':
+      return copy.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+    case 'popular':
+    default:
+      // Mantiene el orden curado inicial
+      return copy;
+  }
+}
+
+/**
+ * Crea el icono personalizado para el marcador en el mapa
+ */
+function createMarkerIcon(category, isSelected = false) {
+  const meta = CATEGORY_META[category] || { color: '#64748b', icon: '🏛️' };
+  const activeClass = isSelected ? 'pin-active' : '';
+
+  return L.divIcon({
+    className: 'custom-leaflet-div-icon',
+    html: `
+      <div class="custom-map-pin ${activeClass}" style="background-color: ${meta.color}">
+        <span class="custom-map-pin-inner">${meta.icon}</span>
+      </div>
+    `,
+    iconSize: [34, 34],
+    iconAnchor: [17, 34],
+    popupAnchor: [0, -32]
+  });
+}
+
+/**
+ * Renderiza los marcadores en el mapa para los museos filtrados
+ */
+function renderMapMarkers(museos) {
+  AppState.markersLayer.clearLayers();
+  AppState.markersMap.clear();
+
+  museos.forEach(museo => {
+    const isSelected = museo.id === AppState.selectedId;
+    const icon = createMarkerIcon(museo.categoria, isSelected);
+
+    const marker = L.marker(museo.coordenadas, { icon, title: museo.nombre });
+
+    // Contenido del popup
+    const popupHtml = buildPopupContent(museo);
+    marker.bindPopup(popupHtml, { maxWidth: 280, minWidth: 260 });
+
+    marker.on('click', () => {
+      selectMuseum(museo.id, false); // Selecciona y resalta en lista
+    });
+
+    AppState.markersLayer.addLayer(marker);
+    AppState.markersMap.set(museo.id, marker);
+  });
+}
+
+/**
+ * Construye el HTML del popup de Leaflet
+ */
+function buildPopupContent(museo) {
+  const meta = CATEGORY_META[museo.categoria] || { color: '#64748b' };
+  const freeBadgeHtml = museo.esGratis 
+    ? `<span class="badge badge-free">Entrada Libre</span>` 
+    : '';
+
+  return `
+    <div class="popup-container">
+      <img src="${museo.imagen}" data-fallback="${museo.imagenFallback}" alt="${museo.nombre}" class="popup-header-img" onerror="handleMuseumImageError(this)">
+      <div class="popup-body">
+        <div class="popup-badge-row">
+          <span class="badge badge-category" style="background-color: ${meta.color}">${museo.categoria}</span>
+          ${freeBadgeHtml}
+        </div>
+        <h4 class="popup-title">${museo.nombre}</h4>
+        <p class="popup-address">📍 ${museo.alcaldia}</p>
+        <p class="popup-schedule">🕒 ${museo.horario}</p>
+        <div class="popup-actions">
+          <button class="btn btn-primary popup-btn" onclick="openDetailsModal('${museo.id}')">
+            Ver Detalles
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Renderiza la lista izquierda de tarjetas de museos
+ */
+function renderMuseumsList(museos) {
+  DOM.museumsList.innerHTML = '';
+
+  if (museos.length === 0) {
+    DOM.museumsList.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🏛️</div>
+        <h3>No se encontraron museos</h3>
+        <p>Prueba con otros términos de búsqueda o cambia los filtros de categoría o alcaldía.</p>
+        <button class="btn btn-outline" onclick="resetAllFilters()">Restablecer filtros</button>
+      </div>
+    `;
+    return;
+  }
+
+  museos.forEach(museo => {
+    const isSelected = museo.id === AppState.selectedId;
+    const isFavorited = AppState.favorites.has(museo.id);
+    const meta = CATEGORY_META[museo.categoria] || { color: '#64748b' };
+
+    const card = document.createElement('article');
+    card.className = `museum-card ${isSelected ? 'selected' : ''}`;
+    card.id = `card-${museo.id}`;
+    card.dataset.id = museo.id;
+
+    // Distancia formateada si existe geolocalización
+    const distanceBadge = museo.distance !== null 
+      ? `<span class="badge-distance">📍 ${museo.distance < 1 ? Math.round(museo.distance * 1000) + ' m' : museo.distance.toFixed(1) + ' km'}</span>` 
+      : '';
+
+    card.innerHTML = `
+      <div class="card-thumb-wrapper">
+        <img 
+          src="${museo.imagen}" 
+          data-fallback="${museo.imagenFallback}"
+          alt="${museo.nombre}" 
+          class="card-thumb" 
+          loading="lazy"
+          onerror="handleMuseumImageError(this)"
+        />
+        <button 
+          class="fav-btn ${isFavorited ? 'favorited' : ''}" 
+          title="${isFavorited ? 'Quitar de favoritos' : 'Guardar en favoritos'}"
+          data-fav-id="${museo.id}"
+        >
+          ${isFavorited ? '❤️' : '🤍'}
+        </button>
+      </div>
+
+      <div class="card-content">
+        <div>
+          <div class="card-header-tags">
+            <span class="badge badge-category" style="background-color: ${meta.color}">${museo.categoria}</span>
+            ${museo.esGratis ? '<span class="badge badge-free">Gratis</span>' : ''}
+            ${distanceBadge}
+          </div>
+          <h3 class="card-title" title="${museo.nombre}">${museo.nombre}</h3>
+          <p class="card-alcaldia">📍 ${museo.alcaldia} · ${museo.direccion.split(',')[0]}</p>
+          <div class="card-highlight" title="${museo.destacado}">
+            ⭐ <strong>Destacado:</strong> ${museo.destacado}
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button class="action-link" data-action="locate">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+              <line x1="8" y1="2" x2="8" y2="18"></line>
+              <line x1="16" y1="6" x2="16" y2="22"></line>
+            </svg>
+            Ver en mapa
+          </button>
+          
+          <button class="btn btn-outline action-btn-sm" data-action="details">
+            Detalles
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Click en la tarjeta
+    card.addEventListener('click', (e) => {
+      // Si fue click en el botón de favorito
+      const favBtn = e.target.closest('.fav-btn');
+      if (favBtn) {
+        e.stopPropagation();
+        toggleFavorite(museo.id);
+        return;
+      }
+
+      // Si fue en "Detalles"
+      if (e.target.closest('[data-action="details"]')) {
+        e.stopPropagation();
+        openDetailsModal(museo.id);
+        return;
+      }
+
+      // Selección normal / "Ver en mapa"
+      selectMuseum(museo.id, true);
+
+      // Si el usuario hace click en "Ver en mapa" en dispositivo móvil, llevarlo a la vista de mapa
+      if (e.target.closest('[data-action="locate"]') || window.innerWidth <= 900) {
+        switchToMapViewIfMobile();
+      }
+    });
+
+    DOM.museumsList.appendChild(card);
+  });
+}
+
+/**
+ * Selecciona un museo, actualiza estado, resalta tarjeta y enfoca en el mapa
+ */
+function selectMuseum(id, shouldFly = true) {
+  AppState.selectedId = id;
+
+  // Actualizar clases de tarjetas seleccionadas
+  document.querySelectorAll('.museum-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.id === id);
+  });
+
+  const card = document.getElementById(`card-${id}`);
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // Resaltar marcador en el mapa
+  const museo = AppState.museos.find(m => m.id === id);
+  if (museo && shouldFly) {
+    focusMuseumOnMap(museo);
+  }
+}
+
+/**
+ * Enfoca el mapa hacia las coordenadas del museo y abre su popup
+ */
+function focusMuseumOnMap(museo) {
+  const marker = AppState.markersMap.get(museo.id);
+
+  AppState.map.flyTo(museo.coordenadas, 16, {
+    duration: 1.2,
+    easeLinearity: 0.25
+  });
+
+  if (marker) {
+    setTimeout(() => {
+      marker.openPopup();
+    }, 600);
+  }
+}
+
+/**
+ * Abre el modal con información detallada de un museo
+ */
+function openDetailsModal(id) {
+  const museo = AppState.museos.find(m => m.id === id);
+  if (!museo) return;
+
+  AppState.selectedId = id;
+
+  DOM.modalImage.src = museo.imagen;
+  DOM.modalImage.alt = museo.nombre;
+  DOM.modalImage.dataset.fallback = museo.imagenFallback;
+  DOM.modalImage.onerror = () => handleMuseumImageError(DOM.modalImage);
+
+  const meta = CATEGORY_META[museo.categoria] || { color: '#64748b' };
+  DOM.modalCategory.textContent = museo.categoria;
+  DOM.modalCategory.style.backgroundColor = meta.color;
+
+  DOM.modalFreeBadge.style.display = museo.esGratis ? 'inline-block' : 'none';
+
+  DOM.modalTitle.textContent = museo.nombre;
+  DOM.modalAlcaldia.textContent = `📍 Alcaldía ${museo.alcaldia}, Ciudad de México`;
+  DOM.modalDescription.textContent = museo.descripcion;
+  DOM.modalHighlight.textContent = museo.destacado;
+  DOM.modalSchedule.textContent = museo.horario;
+  DOM.modalCost.textContent = museo.costo;
+  DOM.modalTransport.textContent = museo.transporte;
+  DOM.modalAddress.textContent = museo.direccion;
+
+  // Enlace a Google Maps para navegación
+  const [lat, lng] = museo.coordenadas;
+  DOM.btnGoogleMapsNav.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+  // Sitio web o ficha de referencia
+  const sicId = SIC_IMAGE_IDS[museo.id];
+  const sicFichaUrl = sicId
+    ? `https://sic.cultura.gob.mx/ficha.php?table=museo&table_id=${sicId}`
+    : '';
+  if (sicId) {
+    DOM.modalImageCredit.href = sicFichaUrl;
+    DOM.modalImageCredit.style.display = 'inline-flex';
+  } else {
+    DOM.modalImageCredit.style.display = 'none';
+  }
+
+  const infoUrl = museo.sitioWeb || museo.fuente || sicFichaUrl;
+  if (infoUrl) {
+    DOM.btnOfficialWeb.href = infoUrl;
+    DOM.btnOfficialWeb.style.display = 'inline-flex';
+  } else {
+    DOM.btnOfficialWeb.style.display = 'none';
+  }
+
+  DOM.modal.style.display = 'flex';
+}
+
+/**
+ * Cierra el modal de detalles
+ */
+function closeModal() {
+  DOM.modal.style.display = 'none';
+}
+
+/**
+ * Alterna el estado de favorito de un museo
+ */
+function toggleFavorite(id) {
+  const museo = AppState.museos.find(m => m.id === id);
+  const name = museo ? museo.nombre : 'Museo';
+
+  if (AppState.favorites.has(id)) {
+    AppState.favorites.delete(id);
+    showToast(`Eliminado de favoritos: ${name}`);
+  } else {
+    AppState.favorites.add(id);
+    showToast(`¡Guardado en favoritos! ❤️ ${name}`);
+  }
+
+  saveFavoritesToStorage();
+  applyFiltersAndRender();
+}
+
+/**
+ * Ajusta el encuadre del mapa para mostrar todos los museos visibles
+ */
+function fitMapToMarkers() {
+  const markers = Array.from(AppState.markersMap.values());
+  if (markers.length > 0) {
+    const group = L.featureGroup(markers);
+    AppState.map.fitBounds(group.getBounds().pad(0.1), {
+      padding: [40, 40],
+      maxZoom: 15,
+      animate: true,
+      duration: 1.0
+    });
+  } else {
+    AppState.map.setView(CDMX_CENTER, DEFAULT_ZOOM);
+  }
+}
+
+/**
+ * Restablece todos los filtros a sus valores predeterminados
+ */
+function resetAllFilters() {
+  AppState.activeCategory = 'all';
+  AppState.activeAlcaldia = 'all';
+  AppState.onlyFree = false;
+  AppState.searchQuery = '';
+  AppState.showOnlyFavorites = false;
+  AppState.sortOrder = 'popular';
+
+  DOM.searchInput.value = '';
+  DOM.clearSearchBtn.style.display = 'none';
+  DOM.alcaldiaSelect.value = 'all';
+  DOM.onlyFreeCheckbox.checked = false;
+  DOM.sortSelect.value = 'popular';
+  DOM.btnFavorites.classList.remove('active');
+
+  document.querySelectorAll('.chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.category === 'all');
+  });
+
+  applyFiltersAndRender();
+  fitMapToMarkers();
+  showToast('Filtros restablecidos');
+}
+
+/**
+ * Geolocalización del usuario y cálculo de proximidad
+ */
+function handleUserGeolocation() {
+  if (!navigator.geolocation) {
+    showToast('Tu navegador no soporta geolocalización');
+    return;
+  }
+
+  showToast('Obteniendo tu ubicación actual... 🛰️');
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const { latitude, longitude } = position.coords;
+      AppState.userCoords = [latitude, longitude];
+
+      // Calcular distancia para cada museo con la fórmula de Haversine
+      AppState.museos.forEach(museo => {
+        museo.distance = calculateHaversineDistance(
+          latitude, longitude,
+          museo.coordenadas[0], museo.coordenadas[1]
+        );
+      });
+
+      // Crear o mover marcador del usuario
+      if (AppState.userMarker) {
+        AppState.map.removeLayer(AppState.userMarker);
+      }
+
+      const userIcon = L.divIcon({
+        className: 'user-location-pin',
+        html: `
+          <div style="
+            width: 20px;
+            height: 20px;
+            background: #2563eb;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.6);
+          "></div>
+        `,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+      });
+
+      AppState.userMarker = L.marker([latitude, longitude], { icon: userIcon })
+        .addTo(AppState.map)
+        .bindPopup('<strong>Tu ubicación actual</strong>');
+
+      // Habilitar y seleccionar orden por distancia
+      DOM.sortDistanceOption.disabled = false;
+      DOM.sortSelect.value = 'distance';
+      AppState.sortOrder = 'distance';
+
+      DOM.btnNearMe.classList.add('active');
+
+      applyFiltersAndRender();
+      showToast('¡Ubicación detectada! Museos ordenados por cercanía');
+
+      // Centrar mapa mostrando al usuario y los museos más cercanos
+      AppState.map.flyTo([latitude, longitude], 13.5, { duration: 1.2 });
+    },
+    (error) => {
+      console.warn('Error de geolocalización:', error);
+      let msg = 'No se pudo obtener tu ubicación';
+      if (error.code === error.PERMISSION_DENIED) {
+        msg = 'Permiso de ubicación denegado';
+      }
+      showToast(msg);
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+/**
+ * Calcula la distancia en kilómetros entre dos coordenadas (Haversine)
+ */
+function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radio de la Tierra en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+/**
+ * Muestra notificación toast temporal
+ */
+let toastTimeout = null;
+function showToast(message) {
+  if (toastTimeout) clearTimeout(toastTimeout);
+  DOM.toast.textContent = message;
+  DOM.toast.style.display = 'flex';
+
+  toastTimeout = setTimeout(() => {
+    DOM.toast.style.display = 'none';
+  }, 3200);
+}
+
+/**
+ * Cambia automáticamente a la vista de mapa si estamos en pantalla móvil
+ */
+function switchToMapViewIfMobile() {
+  if (window.innerWidth <= 900) {
+    document.body.classList.add('view-map');
+    document.body.classList.remove('view-sidebar');
+    document.querySelectorAll('.toggle-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.view === 'map');
+    });
+    setTimeout(() => {
+      AppState.map.invalidateSize();
+    }, 300);
+  }
+}
+
+// Exponer funciones globales accesibles desde strings HTML de popups
+window.openDetailsModal = openDetailsModal;
+window.resetAllFilters = resetAllFilters;
