@@ -51,6 +51,10 @@
         <span id="favLabel">Favoritos (<span id="favCount">0</span>)</span>
       </button>
 
+      <button class="btn btn-outline theme-toggle" id="themeToggle" type="button" aria-label="Cambiar a tema oscuro" title="Cambiar a tema oscuro" aria-pressed="false">
+        <span class="theme-toggle-icon" id="themeToggleIcon" aria-hidden="true">🌙</span>
+      </button>
+
       <!-- Botón de alternancia en móviles -->
       <div class="mobile-view-toggle" id="mobileViewToggle">
         <button class="toggle-btn active" data-view="sidebar">Lista</button>
@@ -158,6 +162,7 @@
           <div class="layer-dropdown" id="layerDropdown">
             <button class="layer-option active" data-layer="osm">OpenStreetMap</button>
             <button class="layer-option" data-layer="topo">Topográfico</button>
+            <button class="layer-option" data-layer="dark">Oscuro</button>
           </div>
         </div>
       </div>

@@ -21,7 +21,10 @@ const AppState = {
   markersLayer: null,
   userMarker: null,
   baseTileLayers: {},
-  currentBaseLayer: null
+  currentBaseLayer: null,
+  currentBaseLayerKey: 'osm',
+  lightBaseLayerKey: 'osm',
+  theme: 'light'
 };
 
 // Mapeo de categorías con colores e iconos
@@ -154,6 +157,7 @@ const DOM = {};
 
 document.addEventListener('DOMContentLoaded', () => {
   initDOMReferences();
+  initTheme();
   loadFavoritesFromStorage();
   initMap();
   initData();
@@ -178,6 +182,8 @@ function initDOMReferences() {
   DOM.resultsFeedback = document.getElementById('resultsFeedback');
   DOM.btnNearMe = document.getElementById('btnNearMe');
   DOM.btnFavorites = document.getElementById('btnFavorites');
+  DOM.themeToggle = document.getElementById('themeToggle');
+  DOM.themeToggleIcon = document.getElementById('themeToggleIcon');
   DOM.favCount = document.getElementById('favCount');
   DOM.favLabel = document.getElementById('favLabel');
   DOM.btnResetMap = document.getElementById('btnResetMap');
@@ -241,6 +247,42 @@ function updateFavoritesBadge() {
   DOM.favCount.textContent = count;
 }
 
+function initTheme() {
+  let theme = 'light';
+  try {
+    const savedTheme = localStorage.getItem('museos_cdmx_theme');
+    if (savedTheme === 'dark' || savedTheme === 'light') theme = savedTheme;
+  } catch (error) {
+    console.warn('No se pudo cargar la preferencia de tema:', error);
+  }
+  setTheme(theme, false);
+}
+
+function setTheme(theme, persist = true) {
+  AppState.theme = theme;
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+
+  const isDark = theme === 'dark';
+  const label = isDark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro';
+  DOM.themeToggleIcon.textContent = isDark ? '☀️' : '🌙';
+  DOM.themeToggle.setAttribute('aria-label', label);
+  DOM.themeToggle.title = label;
+  DOM.themeToggle.setAttribute('aria-pressed', String(isDark));
+
+  if (AppState.map) {
+    setBaseLayer(isDark ? 'dark' : AppState.lightBaseLayerKey, false);
+  }
+
+  if (persist) {
+    try {
+      localStorage.setItem('museos_cdmx_theme', theme);
+    } catch (error) {
+      console.warn('No se pudo guardar la preferencia de tema:', error);
+    }
+  }
+}
+
 /**
  * Inicializa el mapa Leaflet con capas personalizadas
  */
@@ -263,15 +305,45 @@ function initMap() {
     topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
       maxZoom: 17
+    }),
+    dark: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
     })
   };
 
   // Capa inicial
-  AppState.currentBaseLayer = AppState.baseTileLayers.osm;
+  AppState.currentBaseLayerKey = AppState.theme === 'dark' ? 'dark' : 'osm';
+  AppState.currentBaseLayer = AppState.baseTileLayers[AppState.currentBaseLayerKey];
   AppState.currentBaseLayer.addTo(AppState.map);
+  document.body.classList.toggle('dark-map', AppState.currentBaseLayerKey === 'dark');
+  updateLayerOptions();
 
   // Capa para marcadores
   AppState.markersLayer = L.layerGroup().addTo(AppState.map);
+}
+
+function setBaseLayer(layerKey, notify = true) {
+  const layer = AppState.baseTileLayers[layerKey];
+  if (!layer) return;
+
+  if (AppState.currentBaseLayer !== layer) {
+    if (AppState.currentBaseLayer) AppState.map.removeLayer(AppState.currentBaseLayer);
+    AppState.currentBaseLayer = layer;
+    AppState.currentBaseLayer.addTo(AppState.map);
+  }
+  AppState.currentBaseLayerKey = layerKey;
+  document.body.classList.toggle('dark-map', layerKey === 'dark');
+  if (layerKey !== 'dark') AppState.lightBaseLayerKey = layerKey;
+  updateLayerOptions();
+
+  if (notify) showToast(`Capa de mapa cambiada: ${layerKey === 'dark' ? 'Oscuro' : layerKey === 'topo' ? 'Topográfico' : 'OpenStreetMap'}`);
+}
+
+function updateLayerOptions() {
+  document.querySelectorAll('.layer-option').forEach(button => {
+    button.classList.toggle('active', button.dataset.layer === AppState.currentBaseLayerKey);
+  });
 }
 
 /**
@@ -467,6 +539,12 @@ function initEventHandlers() {
     applyFiltersAndRender();
   });
 
+  DOM.themeToggle.addEventListener('click', () => {
+    const theme = AppState.theme === 'dark' ? 'light' : 'dark';
+    setTheme(theme);
+    showToast(theme === 'dark' ? 'Tema oscuro activado' : 'Tema claro activado');
+  });
+
   // Centrar mapa
   DOM.btnResetMap.addEventListener('click', () => {
     fitMapToMarkers();
@@ -490,14 +568,8 @@ function initEventHandlers() {
     
     const layerKey = opt.dataset.layer;
     if (AppState.baseTileLayers[layerKey]) {
-      AppState.map.removeLayer(AppState.currentBaseLayer);
-      AppState.currentBaseLayer = AppState.baseTileLayers[layerKey];
-      AppState.currentBaseLayer.addTo(AppState.map);
-      
-      document.querySelectorAll('.layer-option').forEach(btn => btn.classList.remove('active'));
-      opt.classList.add('active');
+      setBaseLayer(layerKey);
       DOM.layerDropdown.classList.remove('show');
-      showToast(`Capa de mapa cambiada: ${opt.textContent}`);
     }
   });
 
