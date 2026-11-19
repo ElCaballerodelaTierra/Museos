@@ -222,6 +222,7 @@ function initDOMReferences() {
   DOM.modalNocheDetails = document.getElementById('modalNocheDetails');
   DOM.modalNocheImage = document.getElementById('modalNocheImage');
   DOM.modalNocheTitle = document.getElementById('modalNocheTitle');
+  DOM.modalNocheFreeBadge = document.getElementById('modalNocheFreeBadge');
   DOM.modalNocheFields = document.getElementById('modalNocheFields');
   DOM.btnFocusMapFromModal = document.getElementById('btnFocusMapFromModal');
   DOM.btnGoogleMapsNav = document.getElementById('btnGoogleMapsNav');
@@ -828,8 +829,11 @@ function applyFiltersAndRender() {
       return false;
     }
 
-    // Filtro de solo entrada libre
-    if (AppState.onlyFree && !museo.esGratis) {
+    // En Noche de Museos se filtra por el costo del evento, no el del museo.
+    const hasFreeAdmission = AppState.showOnlyNocheMuseos
+      ? Boolean(museo.nocheMuseos && isFreeNocheMuseosEvent(museo.nocheMuseos))
+      : museo.esGratis;
+    if (AppState.onlyFree && !hasFreeAdmission) {
       return false;
     }
 
@@ -1242,6 +1246,7 @@ function openDetailsModal(id) {
 
 function renderNocheMuseosDetails(museo) {
   DOM.modalNocheFields.innerHTML = '';
+  DOM.modalNocheFreeBadge.style.display = 'none';
   DOM.modalNocheImage.removeAttribute('src');
   DOM.modalNocheImage.alt = '';
   DOM.modalNocheImage.style.display = 'none';
@@ -1252,6 +1257,7 @@ function renderNocheMuseosDetails(museo) {
   if (!isVisible) return;
 
   DOM.modalNocheTitle.textContent = event.title || '';
+  DOM.modalNocheFreeBadge.style.display = isFreeNocheMuseosEvent(event) ? 'inline-block' : 'none';
   if (event.image) {
     DOM.modalNocheImage.alt = `Cartel del evento: ${event.title}`;
     DOM.modalNocheImage.onerror = () => {
@@ -1284,6 +1290,10 @@ function renderNocheMuseosDetails(museo) {
     item.append(term, description);
     DOM.modalNocheFields.appendChild(item);
   });
+}
+
+function isFreeNocheMuseosEvent(event) {
+  return /entrada libre|sin costo/i.test(event.admission || '');
 }
 
 function renderSicDetails(museo) {

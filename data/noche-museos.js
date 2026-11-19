@@ -248,7 +248,7 @@ const NOCHE_MUSEOS_DATA = [
       image: 'data/noche-museos/museo-acuarela.jpg',
       activities: 'Taller de acuarela y karaoke conducido por Alejandro Félix.',
       schedule: 'Taller 17:00; karaoke 18:00.',
-      admission: 'Taller con cuota de recuperación.',
+      admission: 'Karaoke de entrada libre; taller con cuota de recuperación.',
       capacity: 'Taller: máximo 30 participantes.',
       registration: 'Registro previo para el taller.',
       contact: 'avisos@acuarela.org.mx.'
@@ -322,7 +322,7 @@ const NOCHE_MUSEOS_DATA = [
       image: 'data/noche-museos/casa-jaime-sabines.jpg',
       activities: 'Taller de creación de ex-libris; lectura de «Las luciérnagas», de Adalberto Ortiz Ávalos; conversatorio «Tetahuila: la semilla que nos mira y la reciprocidad de la tierra».',
       schedule: 'Taller 18:00 a 19:00; lectura 19:00; conversatorio 20:00.',
-      admission: 'No se indica costo en el cartel.',
+      admission: 'Entrada libre.',
       capacity: 'Aforo general de 100 personas; taller limitado a 20.',
       registration: 'Registro del taller por Instagram; lectura y conversatorio sin registro previo.'
     }
