@@ -302,7 +302,7 @@ html, body {
   background: var(--bg-card);
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .noche-museos-toggle {
@@ -394,7 +394,7 @@ html, body {
   display: flex;
   gap: 0.4rem;
   overflow-x: auto;
-  padding-bottom: 0.35rem;
+  padding-bottom: 0.25rem;
   scrollbar-width: thin;
 }
 
@@ -434,64 +434,54 @@ html, body {
   box-shadow: 0 2px 4px rgba(201, 42, 42, 0.2);
 }
 
-/* Filtros secundarios */
-.secondary-filters {
+.free-entry-days {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex: 1;
-}
-
-.filter-group label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-.form-select {
-  width: 100%;
-  padding: 0.38rem 0.6rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color);
-  font-family: inherit;
-  font-size: 0.76rem;
-  background-color: var(--bg-page);
-  color: var(--text-main);
-  cursor: pointer;
-}
-
-.form-select:focus {
-  outline: none;
-  border-color: var(--primary);
+.free-entry-days[hidden] {
+  display: none;
 }
 
 /* Barra de control de resultados */
 .list-controls {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "free sort"
+    "results results";
   align-items: center;
-  justify-content: space-between;
-  padding-top: 0.25rem;
+  gap: 0.35rem 0.6rem;
   font-size: 0.75rem;
   color: var(--text-muted);
 }
 
 .results-feedback {
+  grid-area: results;
+  min-width: 0;
   font-weight: 600;
   color: var(--text-muted);
+  text-align: center;
+}
+
+.free-entry-toggle {
+  grid-area: free;
+  justify-self: start;
+  flex-shrink: 0;
 }
 
 .sort-wrapper {
+  grid-area: sort;
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  flex-shrink: 0;
+  justify-self: end;
+}
+
+.sort-wrapper label {
+  white-space: nowrap;
 }
 
 .sort-select {
@@ -1420,6 +1410,41 @@ html, body {
 }
 
 @media (max-width: 600px) {
+  .list-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.35rem 0.3rem;
+  }
+
+  .sort-wrapper {
+    flex: 1 1 0;
+    max-width: 120px;
+    min-width: 0;
+    gap: 0;
+    justify-self: auto;
+  }
+
+  .results-feedback {
+    flex: 1 0 100%;
+  }
+
+  .sort-wrapper label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sort-select {
+    width: 100%;
+    min-width: 0;
+    font-size: 0.6rem;
+  }
+
   .modal-noche-content {
     grid-template-columns: minmax(0, 1fr);
   }

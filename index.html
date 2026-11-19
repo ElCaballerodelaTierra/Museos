@@ -110,24 +110,11 @@
           <button class="chip" data-category="Infantil">🎈 Infantil</button>
         </div>
 
-        <!-- Filtros secundarios: Alcaldía y Gratuidad -->
-        <div class="secondary-filters">
-          <div class="filter-group">
-            <label for="alcaldiaSelect">Alcaldía:</label>
-            <select id="alcaldiaSelect" class="form-select">
-              <option value="all">Todas</option>
-              <!-- Las opciones se generarán dinámicamente -->
-            </select>
-          </div>
-
-          <button class="chip free-entry-toggle" id="btnOnlyFree" type="button" aria-pressed="false">
+        <!-- Barra de resultados, entrada libre y ordenamiento -->
+        <div class="list-controls">
+          <button class="chip free-entry-toggle" id="btnOnlyFree" type="button" aria-pressed="false" aria-expanded="false" aria-controls="freeEntryDayOptions">
             Entrada libre
           </button>
-        </div>
-
-        <!-- Barra de estado y ordenamiento -->
-        <div class="list-controls">
-          <span class="results-feedback" id="resultsFeedback">Cargando museos...</span>
           <div class="sort-wrapper">
             <label for="sortSelect">Ordenar:</label>
             <select id="sortSelect" class="sort-select">
@@ -136,7 +123,19 @@
               <option value="distance" disabled id="sortDistanceOption">Proximidad (cercanía)</option>
             </select>
           </div>
+          <span class="results-feedback" id="resultsFeedback">Cargando museos...</span>
         </div>
+        <div class="free-entry-days" id="freeEntryDayOptions" role="group" aria-label="Filtrar entrada libre por día" hidden>
+          <button class="chip active" type="button" data-free-day="all" aria-pressed="true">Todos los días</button>
+          <button class="chip" type="button" data-free-day="domingo" aria-pressed="false">Domingo</button>
+          <button class="chip" type="button" data-free-day="lunes" aria-pressed="false">Lunes</button>
+          <button class="chip" type="button" data-free-day="martes" aria-pressed="false">Martes</button>
+          <button class="chip" type="button" data-free-day="miercoles" aria-pressed="false">Miércoles</button>
+          <button class="chip" type="button" data-free-day="jueves" aria-pressed="false">Jueves</button>
+          <button class="chip" type="button" data-free-day="viernes" aria-pressed="false">Viernes</button>
+          <button class="chip" type="button" data-free-day="sabado" aria-pressed="false">Sábado</button>
+        </div>
+
       </div>
 
       <!-- Lista con scroll de tarjetas de museos -->

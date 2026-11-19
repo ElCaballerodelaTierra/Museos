@@ -9,8 +9,8 @@ const AppState = {
   filteredMuseos: [],
   selectedId: null,
   activeCategory: 'all',
-  activeAlcaldia: 'all',
   onlyFree: false,
+  freeAdmissionDay: 'all',
   searchQuery: '',
   sortOrder: 'name-asc',
   showOnlyFavorites: false,
@@ -179,8 +179,8 @@ function initDOMReferences() {
   DOM.searchInput = document.getElementById('searchInput');
   DOM.clearSearchBtn = document.getElementById('clearSearchBtn');
   DOM.categoryChips = document.getElementById('categoryChips');
-  DOM.alcaldiaSelect = document.getElementById('alcaldiaSelect');
   DOM.btnOnlyFree = document.getElementById('btnOnlyFree');
+  DOM.freeEntryDayOptions = document.getElementById('freeEntryDayOptions');
   DOM.sortSelect = document.getElementById('sortSelect');
   DOM.sortDistanceOption = document.getElementById('sortDistanceOption');
   DOM.visibleCount = document.getElementById('visibleCount');
@@ -292,6 +292,13 @@ function updateNocheMuseosButton() {
 function updateFreeEntryButton() {
   DOM.btnOnlyFree.classList.toggle('active', AppState.onlyFree);
   DOM.btnOnlyFree.setAttribute('aria-pressed', String(AppState.onlyFree));
+  DOM.btnOnlyFree.setAttribute('aria-expanded', String(AppState.onlyFree));
+  DOM.freeEntryDayOptions.hidden = !AppState.onlyFree;
+  DOM.freeEntryDayOptions.querySelectorAll('[data-free-day]').forEach(button => {
+    const isActive = button.dataset.freeDay === AppState.freeAdmissionDay;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
 }
 
 function findMuseumById(id) {
@@ -533,14 +540,6 @@ function initData() {
       nocheMuseos: record.event
     }));
 
-  // Poblar opciones de alcaldía ordenadas alfabéticamente
-  const alcaldias = [...new Set(AppState.museos.map(m => m.alcaldia))].sort();
-  alcaldias.forEach(alc => {
-    const opt = document.createElement('option');
-    opt.value = alc;
-    opt.textContent = alc;
-    DOM.alcaldiaSelect.appendChild(opt);
-  });
 }
 
 function getSicCategory(theme) {
@@ -653,22 +652,26 @@ function initEventHandlers() {
     const chip = e.target.closest('.chip');
     if (!chip) return;
     
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    DOM.categoryChips.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
     chip.classList.add('active');
     
     AppState.activeCategory = chip.dataset.category;
     applyFiltersAndRender();
   });
 
-  // Filtro por alcaldía
-  DOM.alcaldiaSelect.addEventListener('change', (e) => {
-    AppState.activeAlcaldia = e.target.value;
-    applyFiltersAndRender();
-  });
-
   // Filtro de entrada libre
   DOM.btnOnlyFree.addEventListener('click', () => {
     AppState.onlyFree = !AppState.onlyFree;
+    if (!AppState.onlyFree) AppState.freeAdmissionDay = 'all';
+    updateFreeEntryButton();
+    applyFiltersAndRender();
+  });
+
+  DOM.freeEntryDayOptions.addEventListener('click', event => {
+    const button = event.target.closest('[data-free-day]');
+    if (!button) return;
+
+    AppState.freeAdmissionDay = button.dataset.freeDay;
     updateFreeEntryButton();
     applyFiltersAndRender();
   });
@@ -824,17 +827,20 @@ function applyFiltersAndRender() {
       return false;
     }
 
-    // Filtro por alcaldía
-    if (AppState.activeAlcaldia !== 'all' && museo.alcaldia !== AppState.activeAlcaldia) {
-      return false;
-    }
-
-    // En Noche de Museos se filtra por el costo del evento, no el del museo.
-    const hasFreeAdmission = AppState.showOnlyNocheMuseos
-      ? Boolean(museo.nocheMuseos && isFreeNocheMuseosEvent(museo.nocheMuseos))
-      : museo.esGratis;
-    if (AppState.onlyFree && !hasFreeAdmission) {
-      return false;
+    if (AppState.onlyFree) {
+      if (AppState.showOnlyNocheMuseos) {
+        const eventIsFree = museo.nocheMuseos && isFreeNocheMuseosEvent(museo.nocheMuseos);
+        const eventMatchesDay = AppState.freeAdmissionDay === 'all' ||
+          AppState.freeAdmissionDay === 'miercoles';
+        if (!eventIsFree || !eventMatchesDay) return false;
+      } else {
+        const freeDays = getMuseumFreeAdmissionDays(museo);
+        const hasFreeAdmission = AppState.freeAdmissionDay === 'all'
+          ? freeDays.size > 0
+          : freeDays.has('all') || freeDays.has(AppState.freeAdmissionDay);
+        const isOpen = isMuseumOpenOnDay(museo, AppState.freeAdmissionDay);
+        if (!hasFreeAdmission || !isOpen) return false;
+      }
     }
 
     // Filtro de solo favoritos
@@ -1296,6 +1302,77 @@ function isFreeNocheMuseosEvent(event) {
   return /entrada libre|sin costo/i.test(event.admission || '');
 }
 
+function getMuseumFreeAdmissionDays(museo) {
+  const allWeekdays = new Set(['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']);
+  if (museo.esGratis) return allWeekdays;
+
+  const cost = normalizeText(museo.costo || '');
+  if (!/\b(?:entrada\s+)?(?:libre|gratis)\b|\bsin\s+costo\b/.test(cost)) {
+    return new Set();
+  }
+
+  const freeDays = new Set([...allWeekdays].filter(day => new RegExp(`\\b${day}s?\\b`).test(cost)));
+  return freeDays.size ? freeDays : allWeekdays;
+}
+
+function isMuseumOpenOnDay(museo, day) {
+  const openDays = getMuseumOpenDays(museo);
+  if (day === 'all') return openDays === null || openDays.size > 0;
+  return openDays === null || openDays.has(day);
+}
+
+function getMuseumOpenDays(museo) {
+  const schedule = normalizeText(museo.horario || '');
+  if (/\btemporalmente cerrado\b|\bpermanentemente cerrado\b/.test(schedule)) {
+    return new Set();
+  }
+
+  const weekdays = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+  const weekdayPattern = weekdays.join('|');
+  const openDays = new Set();
+  const dayRanges = new RegExp(
+    `\\b(${weekdayPattern})s?\\s+(?:a|al|hasta)\\s+(${weekdayPattern})s?\\b`,
+    'g'
+  );
+  let range;
+
+  while ((range = dayRanges.exec(schedule)) !== null) {
+    let index = weekdays.indexOf(range[1]);
+    const endIndex = weekdays.indexOf(range[2]);
+    while (true) {
+      openDays.add(weekdays[index]);
+      if (index === endIndex) break;
+      index = (index + 1) % weekdays.length;
+    }
+  }
+
+  const closedDays = new Set(weekdays.filter(day => {
+    const dayBeforeClosure = new RegExp(
+      `\\b${day}s?\\s*[:,–-]?\\s+(?:(?:permanece|se encuentra)\\s+)?cerrad[oa]s?\\b`
+    );
+    const closureBeforeDay = new RegExp(
+      `\\b(?:cerrad[oa]s?|no abre|descanso)\\s+(?:los\\s+)?${day}s?\\b|\\bcierra\\s+(?:los\\s+)?${day}s?\\b`
+    );
+    return dayBeforeClosure.test(schedule) || closureBeforeDay.test(schedule);
+  }));
+
+  weekdays.forEach(day => {
+    if (new RegExp(`\\b${day}s?\\b`).test(schedule) && !closedDays.has(day)) {
+      openDays.add(day);
+    }
+  });
+
+  if (!openDays.size && closedDays.size) {
+    weekdays.forEach(day => {
+      if (!closedDays.has(day)) openDays.add(day);
+    });
+  }
+
+  if (!openDays.size && !closedDays.size) return null;
+  closedDays.forEach(day => openDays.delete(day));
+  return openDays;
+}
+
 function renderSicDetails(museo) {
   DOM.modalSicFields.innerHTML = '';
   const info = museo.sicInfo;
@@ -1469,8 +1546,9 @@ function fitMapToMarkers() {
  */
 function resetAllFilters() {
   AppState.activeCategory = 'all';
-  AppState.activeAlcaldia = 'all';
   AppState.onlyFree = false;
+  AppState.freeAdmissionDay = 'all';
+  AppState.freeAdmissionDay = 'all';
   AppState.searchQuery = '';
   AppState.showOnlyFavorites = false;
   AppState.showOnlyVisited = false;
@@ -1479,14 +1557,13 @@ function resetAllFilters() {
 
   DOM.searchInput.value = '';
   DOM.clearSearchBtn.style.display = 'none';
-  DOM.alcaldiaSelect.value = 'all';
   updateFreeEntryButton();
   DOM.sortSelect.value = 'name-asc';
   DOM.btnFavorites.classList.remove('active');
   updateVisitedFilterButton();
   updateNocheMuseosButton();
 
-  document.querySelectorAll('.chip').forEach(c => {
+  DOM.categoryChips.querySelectorAll('.chip').forEach(c => {
     c.classList.toggle('active', c.dataset.category === 'all');
   });
 
