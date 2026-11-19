@@ -77,6 +77,11 @@
     <aside class="sidebar" id="sidebar">
       <!-- Barra de búsqueda y filtros -->
       <div class="search-section">
+        <button class="noche-museos-toggle" id="btnNocheMuseos" type="button" aria-pressed="false">
+          <span aria-hidden="true">🌙</span>
+          <span>Noche de Museos</span>
+        </button>
+
         <div class="search-input-wrapper">
           <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle>
@@ -103,7 +108,6 @@
           <button class="chip" data-category="Casas Museo">🏡 Casas Museo</button>
           <button class="chip" data-category="Cultura Popular">🎭 Cultura Popular</button>
           <button class="chip" data-category="Infantil">🎈 Infantil</button>
-          <button class="chip" data-category="Sin clasificar">📚 Sin clasificar</button>
         </div>
 
         <!-- Filtros secundarios: Alcaldía y Gratuidad -->
@@ -111,16 +115,14 @@
           <div class="filter-group">
             <label for="alcaldiaSelect">Alcaldía:</label>
             <select id="alcaldiaSelect" class="form-select">
-              <option value="all">Todas las alcaldías</option>
+              <option value="all">Todas</option>
               <!-- Las opciones se generarán dinámicamente -->
             </select>
           </div>
 
-          <label class="checkbox-container">
-            <input type="checkbox" id="onlyFreeCheckbox">
-            <span class="checkmark"></span>
-            <span class="checkbox-label">Solo entrada libre 🟢</span>
-          </label>
+          <button class="chip free-entry-toggle" id="btnOnlyFree" type="button" aria-pressed="false">
+            Entrada libre
+          </button>
         </div>
 
         <!-- Barra de estado y ordenamiento -->
@@ -129,7 +131,6 @@
           <div class="sort-wrapper">
             <label for="sortSelect">Ordenar:</label>
             <select id="sortSelect" class="sort-select">
-              <option value="popular">Recomendados</option>
               <option value="name-asc">Nombre (A - Z)</option>
               <option value="name-desc">Nombre (Z - A)</option>
               <option value="distance" disabled id="sortDistanceOption">Proximidad (cercanía)</option>
@@ -257,6 +258,17 @@
           </div>
         </div>
 
+        <section class="modal-noche-details" id="modalNocheDetails" style="display: none;">
+          <h3>Programación de Noche de Museos</h3>
+          <div class="modal-noche-content">
+            <img class="modal-noche-poster" id="modalNocheImage" alt="">
+            <div class="modal-noche-copy">
+              <h4 id="modalNocheTitle"></h4>
+              <dl class="modal-noche-fields" id="modalNocheFields"></dl>
+            </div>
+          </div>
+        </section>
+
         <section class="modal-sic-details" id="modalSicDetails" style="display: none;">
           <h3>Información del catálogo SIC</h3>
           <dl class="modal-sic-fields" id="modalSicFields"></dl>
@@ -298,6 +310,7 @@
   <!-- Datos de los museos -->
   <script src="data/museos.js"></script>
   <script src="data/museos-sic.js"></script>
+  <script src="data/noche-museos.js"></script>
   
   <!-- Lógica de la aplicación -->
   <script src="app.js"></script>

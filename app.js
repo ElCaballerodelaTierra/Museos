@@ -12,12 +12,14 @@ const AppState = {
   activeAlcaldia: 'all',
   onlyFree: false,
   searchQuery: '',
-  sortOrder: 'popular',
+  sortOrder: 'name-asc',
   showOnlyFavorites: false,
   showOnlyVisited: false,
+  showOnlyNocheMuseos: false,
   userCoords: null,
   favorites: new Set(),
   visitedMuseums: new Set(),
+  nocheMuseosOnly: [],
   markersMap: new Map(), // id -> L.Marker
   map: null,
   markersLayer: null,
@@ -178,7 +180,7 @@ function initDOMReferences() {
   DOM.clearSearchBtn = document.getElementById('clearSearchBtn');
   DOM.categoryChips = document.getElementById('categoryChips');
   DOM.alcaldiaSelect = document.getElementById('alcaldiaSelect');
-  DOM.onlyFreeCheckbox = document.getElementById('onlyFreeCheckbox');
+  DOM.btnOnlyFree = document.getElementById('btnOnlyFree');
   DOM.sortSelect = document.getElementById('sortSelect');
   DOM.sortDistanceOption = document.getElementById('sortDistanceOption');
   DOM.visibleCount = document.getElementById('visibleCount');
@@ -186,6 +188,7 @@ function initDOMReferences() {
   DOM.btnNearMe = document.getElementById('btnNearMe');
   DOM.btnFavorites = document.getElementById('btnFavorites');
   DOM.btnVisited = document.getElementById('btnVisited');
+  DOM.btnNocheMuseos = document.getElementById('btnNocheMuseos');
   DOM.themeToggle = document.getElementById('themeToggle');
   DOM.themeToggleIcon = document.getElementById('themeToggleIcon');
   DOM.favCount = document.getElementById('favCount');
@@ -216,6 +219,10 @@ function initDOMReferences() {
   DOM.btnToggleVisited = document.getElementById('btnToggleVisited');
   DOM.modalVisitIcon = document.getElementById('modalVisitIcon');
   DOM.modalVisitLabel = document.getElementById('modalVisitLabel');
+  DOM.modalNocheDetails = document.getElementById('modalNocheDetails');
+  DOM.modalNocheImage = document.getElementById('modalNocheImage');
+  DOM.modalNocheTitle = document.getElementById('modalNocheTitle');
+  DOM.modalNocheFields = document.getElementById('modalNocheFields');
   DOM.btnFocusMapFromModal = document.getElementById('btnFocusMapFromModal');
   DOM.btnGoogleMapsNav = document.getElementById('btnGoogleMapsNav');
   DOM.btnOfficialWeb = document.getElementById('btnOfficialWeb');
@@ -274,6 +281,27 @@ function saveVisitedMuseumsToStorage() {
 function updateVisitedFilterButton() {
   DOM.btnVisited.classList.toggle('active', AppState.showOnlyVisited);
   DOM.btnVisited.setAttribute('aria-pressed', String(AppState.showOnlyVisited));
+}
+
+function updateNocheMuseosButton() {
+  DOM.btnNocheMuseos.classList.toggle('active', AppState.showOnlyNocheMuseos);
+  DOM.btnNocheMuseos.setAttribute('aria-pressed', String(AppState.showOnlyNocheMuseos));
+}
+
+function updateFreeEntryButton() {
+  DOM.btnOnlyFree.classList.toggle('active', AppState.onlyFree);
+  DOM.btnOnlyFree.setAttribute('aria-pressed', String(AppState.onlyFree));
+}
+
+function findMuseumById(id) {
+  return AppState.museos.find(museo => museo.id === id) ||
+    AppState.nocheMuseosOnly.find(museo => museo.id === id);
+}
+
+function hasValidCoordinates(museo) {
+  return Array.isArray(museo.coordenadas) &&
+    museo.coordenadas.length === 2 &&
+    museo.coordenadas.every(coordinate => typeof coordinate === 'number' && Number.isFinite(coordinate));
 }
 
 function updateFavoritesBadge() {
@@ -396,6 +424,10 @@ function initData() {
       const sicId = Number(source.museo_id);
       const curated = curatedBySicId.get(String(sicId));
       const theme = String(source.museo_tematica_n1 || '').trim();
+      const mappedCategory = theme ? getSicCategory(theme) : '';
+      const category = mappedCategory && mappedCategory !== 'Sin clasificar'
+        ? mappedCategory
+        : (SIC_CATEGORY_OVERRIDES[sicId] || (curated && curated.categoria) || 'Sin clasificar');
       const address = [
         source.museo_calle_numero,
         source.museo_colonia,
@@ -428,7 +460,7 @@ function initData() {
         id: curated ? curated.id : `sic-${sicId}`,
         sicId,
         nombre: String(source.museo_nombre || (curated && curated.nombre) || '').trim(),
-        categoria: theme ? getSicCategory(theme) : (curated ? curated.categoria : 'Sin clasificar'),
+        categoria: category,
         alcaldia: String(source.nom_mun || (curated && curated.alcaldia) || '').trim(),
         direccion: address || (curated && curated.direccion) || 'Dirección no disponible.',
         coordenadas: [Number(source.gmaps_latitud), Number(source.gmaps_longitud)],
@@ -460,12 +492,52 @@ function initData() {
     AppState.museos = [];
   }
 
+  const nocheEvents = typeof NOCHE_MUSEOS_DATA !== 'undefined' && Array.isArray(NOCHE_MUSEOS_DATA)
+    ? NOCHE_MUSEOS_DATA
+    : [];
+  const eventsByMuseumId = new Map();
+  const eventsBySicId = new Map();
+  nocheEvents.forEach(record => {
+    if (record.museumId) eventsByMuseumId.set(record.museumId, record);
+    if (record.sicId) eventsBySicId.set(Number(record.sicId), record);
+  });
+
+  AppState.museos = AppState.museos.map(museo => {
+    const record = eventsByMuseumId.get(museo.id) || eventsBySicId.get(museo.sicId);
+    return record ? { ...museo, nocheMuseos: record.event } : museo;
+  });
+  AppState.nocheMuseosOnly = nocheEvents
+    .filter(record => !record.museumId && !record.sicId)
+    .map(record => ({
+      id: record.id,
+      nombre: record.name,
+      categoria: record.category,
+      alcaldia: record.alcaldia,
+      direccion: record.address,
+      coordenadas: record.coordinates,
+      horario: 'Consulta el programa de Noche de Museos.',
+      costo: 'Consulta el programa de Noche de Museos.',
+      esGratis: false,
+      transporte: 'Consulta las opciones de transporte para esta sede.',
+      destacado: record.event.title,
+      descripcion: 'Sede participante de la Noche de Museos; no forma parte del catálogo general de museos.',
+      imagen: FALLBACK_IMAGE_URL,
+      imagenFallback: '',
+      sitioWeb: '',
+      fuente: '',
+      sicId: null,
+      sicInfo: null,
+      distance: null,
+      isNocheMuseosOnly: true,
+      nocheMuseos: record.event
+    }));
+
   // Poblar opciones de alcaldía ordenadas alfabéticamente
   const alcaldias = [...new Set(AppState.museos.map(m => m.alcaldia))].sort();
   alcaldias.forEach(alc => {
     const opt = document.createElement('option');
     opt.value = alc;
-    opt.textContent = `Alcaldía ${alc}`;
+    opt.textContent = alc;
     DOM.alcaldiaSelect.appendChild(opt);
   });
 }
@@ -481,6 +553,54 @@ function getSicCategory(theme) {
   };
   return categories[theme] || 'Sin clasificar';
 }
+
+// SIC records without a useful theme are assigned by their main subject.
+const SIC_CATEGORY_OVERRIDES = {
+  2234: 'Historia',
+  2567: 'Cultura Popular',
+  2565: 'Cultura Popular',
+  2581: 'Cultura Popular',
+  2566: 'Cultura Popular',
+  2571: 'Cultura Popular',
+  2284: 'Ciencia',
+  535: 'Historia',
+  2613: 'Cultura Popular',
+  2423: 'Historia',
+  2452: 'Historia',
+  2582: 'Cultura Popular',
+  2402: 'Arte',
+  2192: 'Cultura Popular',
+  2161: 'Especializado',
+  2552: 'Arte',
+  2512: 'Historia',
+  2625: 'Arte',
+  2239: 'Historia',
+  2596: 'Antropología',
+  2029: 'Ciencia',
+  2572: 'Especializado',
+  2000: 'Arte',
+  2510: 'Arte',
+  2168: 'Historia',
+  2236: 'Arte',
+  2490: 'Historia',
+  2173: 'Arte',
+  2417: 'Especializado',
+  2526: 'Cultura Popular',
+  2067: 'Historia',
+  2360: 'Historia',
+  1992: 'Historia',
+  2502: 'Especializado',
+  2617: 'Especializado',
+  2428: 'Arte',
+  2216: 'Casas Museo',
+  2238: 'Ciencia',
+  2507: 'Ciencia',
+  2180: 'Ciencia',
+  2181: 'Casas Museo',
+  2064: 'Historia',
+  2518: 'Historia',
+  2551: 'Historia'
+};
 
 function isHttpUrl(value) {
   return typeof value === 'string' && /^https?:\/\//i.test(value.trim());
@@ -545,9 +665,10 @@ function initEventHandlers() {
     applyFiltersAndRender();
   });
 
-  // Filtro de solo entrada libre
-  DOM.onlyFreeCheckbox.addEventListener('change', (e) => {
-    AppState.onlyFree = e.target.checked;
+  // Filtro de entrada libre
+  DOM.btnOnlyFree.addEventListener('click', () => {
+    AppState.onlyFree = !AppState.onlyFree;
+    updateFreeEntryButton();
     applyFiltersAndRender();
   });
 
@@ -580,6 +701,16 @@ function initEventHandlers() {
       ? 'Mostrando solo los museos visitados'
       : 'Mostrando todos los museos');
     applyFiltersAndRender();
+  });
+
+  DOM.btnNocheMuseos.addEventListener('click', () => {
+    AppState.showOnlyNocheMuseos = !AppState.showOnlyNocheMuseos;
+    updateNocheMuseosButton();
+    showToast(AppState.showOnlyNocheMuseos
+      ? 'Mostrando las sedes participantes de Noche de Museos'
+      : 'Mostrando el catálogo general de museos');
+    applyFiltersAndRender();
+    fitMapToMarkers();
   });
 
   DOM.themeToggle.addEventListener('click', () => {
@@ -656,9 +787,9 @@ function initEventHandlers() {
   // Botón del modal "Ver en el Mapa"
   DOM.btnFocusMapFromModal.addEventListener('click', () => {
     if (AppState.selectedId) {
-      const museo = AppState.museos.find(m => m.id === AppState.selectedId);
+      const museo = findMuseumById(AppState.selectedId);
       closeModal();
-      if (museo) {
+      if (museo && hasValidCoordinates(museo)) {
         focusMuseumOnMap(museo);
       }
       // En móvil, cambiar automáticamente a vista de mapa
@@ -682,8 +813,11 @@ function normalizeText(text) {
  */
 function applyFiltersAndRender() {
   const normQuery = normalizeText(AppState.searchQuery);
+  const sourceMuseos = AppState.showOnlyNocheMuseos
+    ? [...AppState.museos.filter(museo => museo.nocheMuseos), ...AppState.nocheMuseosOnly]
+    : AppState.museos;
 
-  let result = AppState.museos.filter(museo => {
+  let result = sourceMuseos.filter(museo => {
     // Filtro por categoría
     if (AppState.activeCategory !== 'all' && museo.categoria !== AppState.activeCategory) {
       return false;
@@ -715,8 +849,11 @@ function applyFiltersAndRender() {
             .map(value => Array.isArray(value) ? value.join(' ') : String(value || ''))
             .join(' ')
         : '';
+      const eventSearchText = museo.nocheMuseos && AppState.showOnlyNocheMuseos
+        ? Object.values(museo.nocheMuseos).join(' ')
+        : '';
       const combined = normalizeText(
-        `${museo.nombre} ${museo.alcaldia} ${museo.direccion} ${museo.descripcion} ${museo.destacado} ${museo.categoria} ${sicSearchText}`
+        `${museo.nombre} ${museo.alcaldia} ${museo.direccion} ${museo.descripcion} ${museo.destacado} ${museo.categoria} ${sicSearchText} ${eventSearchText}`
       );
       if (!combined.includes(normQuery)) {
         return false;
@@ -733,7 +870,10 @@ function applyFiltersAndRender() {
 
   // Actualizar contador y feedback
   DOM.visibleCount.textContent = result.length;
-  DOM.resultsFeedback.textContent = `${result.length} ${result.length === 1 ? 'museo encontrado' : 'museos encontrados'}`;
+  const resultLabel = AppState.showOnlyNocheMuseos
+    ? (result.length === 1 ? 'sede participante' : 'sedes participantes')
+    : (result.length === 1 ? 'museo encontrado' : 'museos encontrados');
+  DOM.resultsFeedback.textContent = `${result.length} ${resultLabel}`;
 
   // Renderizar componentes
   renderMuseumsList(result);
@@ -752,10 +892,8 @@ function sortMuseums(list, order) {
       return copy.sort((a, b) => b.nombre.localeCompare(a.nombre, 'es'));
     case 'distance':
       return copy.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
-    case 'popular':
     default:
-      // Mantiene el orden curado inicial
-      return copy;
+      return copy.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   }
 }
 
@@ -787,6 +925,8 @@ function renderMapMarkers(museos) {
   AppState.markersMap.clear();
 
   museos.forEach(museo => {
+    if (!hasValidCoordinates(museo)) return;
+
     const isSelected = museo.id === AppState.selectedId;
     const icon = createMarkerIcon(museo.categoria, isSelected);
 
@@ -851,7 +991,7 @@ function renderMuseumsList(museos) {
     DOM.museumsList.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">🏛️</div>
-        <h3>No se encontraron museos</h3>
+        <h3>${AppState.showOnlyNocheMuseos ? 'No se encontraron sedes participantes' : 'No se encontraron museos'}</h3>
         <p>Prueba con otros términos de búsqueda o cambia los filtros de categoría o alcaldía.</p>
         <button class="btn btn-outline" onclick="resetAllFilters()">Restablecer filtros</button>
       </div>
@@ -864,8 +1004,12 @@ function renderMuseumsList(museos) {
     const isFavorited = AppState.favorites.has(museo.id);
     const isVisited = AppState.visitedMuseums.has(museo.id);
     const meta = CATEGORY_META[museo.categoria] || { color: '#64748b' };
-    const image = escapeHtml(museo.imagen);
-    const imageFallback = escapeHtml(museo.imagenFallback);
+    const eventPoster = AppState.showOnlyNocheMuseos && museo.nocheMuseos && museo.nocheMuseos.image;
+    const image = escapeHtml(eventPoster || museo.imagen);
+    const imageFallback = escapeHtml(eventPoster ? museo.imagen : museo.imagenFallback);
+    const imageAlt = escapeHtml(eventPoster
+      ? `${museo.nombre} — cartel del evento de Noche de Museos`
+      : museo.nombre);
     const name = escapeHtml(museo.nombre);
     const category = escapeHtml(museo.categoria);
     const alcaldia = escapeHtml(museo.alcaldia);
@@ -881,13 +1025,34 @@ function renderMuseumsList(museos) {
     const distanceBadge = museo.distance !== null 
       ? `<span class="badge-distance">📍 ${museo.distance < 1 ? Math.round(museo.distance * 1000) + ' m' : museo.distance.toFixed(1) + ' km'}</span>` 
       : '';
+    const visitedButton = museo.isNocheMuseosOnly ? '' : `
+      <button
+        type="button"
+        class="visited-card-btn ${isVisited ? 'visited' : ''}"
+        data-action="visited"
+        aria-pressed="${isVisited}"
+        aria-label="${isVisited ? 'Quitar marca de visitado' : 'Marcar como visitado'}"
+        title="${isVisited ? 'Quitar marca de visitado' : 'Marcar como visitado'}"
+      >
+        <span data-visited-icon aria-hidden="true">${isVisited ? '✓' : '○'}</span>
+        <span data-visited-label>${isVisited ? 'Visitado' : 'Marcar visita'}</span>
+      </button>`;
+    const locateButton = hasValidCoordinates(museo) ? `
+      <button class="action-link" data-action="locate">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+          <line x1="8" y1="2" x2="8" y2="18"></line>
+          <line x1="16" y1="6" x2="16" y2="22"></line>
+        </svg>
+        Ver en mapa
+      </button>` : '';
 
     card.innerHTML = `
       <div class="card-thumb-wrapper">
         <img 
           src="${image}" 
           data-fallback="${imageFallback}"
-          alt="${name}" 
+          alt="${imageAlt}" 
           class="card-thumb" 
           loading="lazy"
           onerror="handleMuseumImageError(this)"
@@ -909,17 +1074,7 @@ function renderMuseumsList(museos) {
               ${museo.esGratis ? '<span class="badge badge-free">Gratis</span>' : ''}
               ${distanceBadge}
             </div>
-            <button
-              type="button"
-              class="visited-card-btn ${isVisited ? 'visited' : ''}"
-              data-action="visited"
-              aria-pressed="${isVisited}"
-              aria-label="${isVisited ? 'Quitar marca de visitado' : 'Marcar como visitado'}"
-              title="${isVisited ? 'Quitar marca de visitado' : 'Marcar como visitado'}"
-            >
-              <span data-visited-icon aria-hidden="true">${isVisited ? '✓' : '○'}</span>
-              <span data-visited-label>${isVisited ? 'Visitado' : 'Marcar visita'}</span>
-            </button>
+            ${visitedButton}
           </div>
           <h3 class="card-title" title="${name}">${name}</h3>
           <p class="card-alcaldia">📍 ${alcaldia} · ${address}</p>
@@ -929,15 +1084,7 @@ function renderMuseumsList(museos) {
         </div>
 
         <div class="card-actions">
-          <button class="action-link" data-action="locate">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-              <line x1="8" y1="2" x2="8" y2="18"></line>
-              <line x1="16" y1="6" x2="16" y2="22"></line>
-            </svg>
-            Ver en mapa
-          </button>
-          
+          ${locateButton}
           <button class="btn btn-outline action-btn-sm" data-action="details">
             Detalles
           </button>
@@ -972,7 +1119,8 @@ function renderMuseumsList(museos) {
       selectMuseum(museo.id, true);
 
       // Si el usuario hace click en "Ver en mapa" en dispositivo móvil, llevarlo a la vista de mapa
-      if (e.target.closest('[data-action="locate"]') || window.innerWidth <= 900) {
+      if (e.target.closest('[data-action="locate"]') ||
+          (window.innerWidth <= 900 && hasValidCoordinates(museo))) {
         switchToMapViewIfMobile();
       }
     });
@@ -998,8 +1146,8 @@ function selectMuseum(id, shouldFly = true) {
   }
 
   // Resaltar marcador en el mapa
-  const museo = AppState.museos.find(m => m.id === id);
-  if (museo && shouldFly) {
+  const museo = findMuseumById(id);
+  if (museo && shouldFly && hasValidCoordinates(museo)) {
     focusMuseumOnMap(museo);
   }
 }
@@ -1008,6 +1156,8 @@ function selectMuseum(id, shouldFly = true) {
  * Enfoca el mapa hacia las coordenadas del museo y abre su popup
  */
 function focusMuseumOnMap(museo) {
+  if (!hasValidCoordinates(museo)) return;
+
   const marker = AppState.markersMap.get(museo.id);
 
   AppState.map.flyTo(museo.coordenadas, 16, {
@@ -1026,7 +1176,7 @@ function focusMuseumOnMap(museo) {
  * Abre el modal con información detallada de un museo
  */
 function openDetailsModal(id) {
-  const museo = AppState.museos.find(m => m.id === id);
+  const museo = findMuseumById(id);
   if (!museo) return;
 
   AppState.selectedId = id;
@@ -1043,19 +1193,29 @@ function openDetailsModal(id) {
   DOM.modalFreeBadge.style.display = museo.esGratis ? 'inline-block' : 'none';
 
   DOM.modalTitle.textContent = museo.nombre;
-  DOM.modalAlcaldia.textContent = `📍 Alcaldía ${museo.alcaldia}, Ciudad de México`;
+  DOM.modalAlcaldia.textContent = museo.isNocheMuseosOnly
+    ? `📍 ${museo.alcaldia}`
+    : `📍 Alcaldía ${museo.alcaldia}, Ciudad de México`;
   DOM.modalDescription.textContent = museo.descripcion;
   DOM.modalHighlight.textContent = museo.destacado;
   DOM.modalSchedule.textContent = museo.horario;
   DOM.modalCost.textContent = museo.costo;
   DOM.modalTransport.textContent = museo.transporte;
   DOM.modalAddress.textContent = museo.direccion;
-  updateVisitedButton(id);
+  DOM.btnToggleVisited.style.display = museo.isNocheMuseosOnly ? 'none' : '';
+  if (!museo.isNocheMuseosOnly) updateVisitedButton(id);
+  renderNocheMuseosDetails(museo);
   renderSicDetails(museo);
 
   // Enlace a Google Maps para navegación
-  const [lat, lng] = museo.coordenadas;
-  DOM.btnGoogleMapsNav.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+  if (hasValidCoordinates(museo)) {
+    const [lat, lng] = museo.coordenadas;
+    DOM.btnGoogleMapsNav.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    DOM.btnFocusMapFromModal.style.display = '';
+  } else {
+    DOM.btnGoogleMapsNav.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(museo.nombre)}`;
+    DOM.btnFocusMapFromModal.style.display = 'none';
+  }
 
   // Sitio web o ficha de referencia
   const sicId = museo.sicId || SIC_IMAGE_IDS[museo.id];
@@ -1078,6 +1238,52 @@ function openDetailsModal(id) {
   }
 
   DOM.modal.style.display = 'flex';
+}
+
+function renderNocheMuseosDetails(museo) {
+  DOM.modalNocheFields.innerHTML = '';
+  DOM.modalNocheImage.removeAttribute('src');
+  DOM.modalNocheImage.alt = '';
+  DOM.modalNocheImage.style.display = 'none';
+  DOM.modalNocheImage.onerror = null;
+  const event = museo.nocheMuseos;
+  const isVisible = AppState.showOnlyNocheMuseos && event;
+  DOM.modalNocheDetails.style.display = isVisible ? 'block' : 'none';
+  if (!isVisible) return;
+
+  DOM.modalNocheTitle.textContent = event.title || '';
+  if (event.image) {
+    DOM.modalNocheImage.alt = `Cartel del evento: ${event.title}`;
+    DOM.modalNocheImage.onerror = () => {
+      console.error(`No se pudo cargar el cartel del evento "${event.title}": ${event.image}`);
+      DOM.modalNocheImage.style.display = 'none';
+    };
+    DOM.modalNocheImage.src = event.image;
+    DOM.modalNocheImage.style.display = 'block';
+  } else {
+    console.error(`El evento "${event.title}" no tiene un cartel asociado.`);
+  }
+
+  const fields = [
+    ['Actividades', event.activities],
+    ['Horario', event.schedule],
+    ['Admisión', event.admission],
+    ['Cupo', event.capacity],
+    ['Registro', event.registration],
+    ['Contacto', event.contact],
+    ['Modalidad', event.format]
+  ];
+
+  fields.forEach(([label, value]) => {
+    if (!value) return;
+    const item = document.createElement('div');
+    const term = document.createElement('dt');
+    const description = document.createElement('dd');
+    term.textContent = label;
+    description.textContent = value;
+    item.append(term, description);
+    DOM.modalNocheFields.appendChild(item);
+  });
 }
 
 function renderSicDetails(museo) {
@@ -1193,8 +1399,8 @@ function updateVisitedButton(id) {
 }
 
 function toggleVisitedMuseum(id) {
-  const museo = AppState.museos.find(item => item.id === id);
-  if (!museo) return;
+  const museo = findMuseumById(id);
+  if (!museo || museo.isNocheMuseosOnly) return;
 
   if (AppState.visitedMuseums.has(id)) {
     AppState.visitedMuseums.delete(id);
@@ -1215,7 +1421,7 @@ function toggleVisitedMuseum(id) {
  * Alterna el estado de favorito de un museo
  */
 function toggleFavorite(id) {
-  const museo = AppState.museos.find(m => m.id === id);
+  const museo = findMuseumById(id);
   const name = museo ? museo.nombre : 'Museo';
 
   if (AppState.favorites.has(id)) {
@@ -1258,15 +1464,17 @@ function resetAllFilters() {
   AppState.searchQuery = '';
   AppState.showOnlyFavorites = false;
   AppState.showOnlyVisited = false;
-  AppState.sortOrder = 'popular';
+  AppState.showOnlyNocheMuseos = false;
+  AppState.sortOrder = 'name-asc';
 
   DOM.searchInput.value = '';
   DOM.clearSearchBtn.style.display = 'none';
   DOM.alcaldiaSelect.value = 'all';
-  DOM.onlyFreeCheckbox.checked = false;
-  DOM.sortSelect.value = 'popular';
+  updateFreeEntryButton();
+  DOM.sortSelect.value = 'name-asc';
   DOM.btnFavorites.classList.remove('active');
   updateVisitedFilterButton();
+  updateNocheMuseosButton();
 
   document.querySelectorAll('.chip').forEach(c => {
     c.classList.toggle('active', c.dataset.category === 'all');

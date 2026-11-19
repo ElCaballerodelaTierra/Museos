@@ -305,6 +305,38 @@ html, body {
   gap: 0.75rem;
 }
 
+.noche-museos-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-md);
+  background: var(--primary-light);
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.noche-museos-toggle:hover {
+  transform: translateY(-1px);
+}
+
+.noche-museos-toggle.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.noche-museos-toggle:focus-visible {
+  outline: 3px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
 .search-input-wrapper {
   position: relative;
   display: flex;
@@ -439,50 +471,6 @@ html, body {
 .form-select:focus {
   outline: none;
   border-color: var(--primary);
-}
-
-/* Checkbox personalizado */
-.checkbox-container {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  position: relative;
-  user-select: none;
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: var(--text-main);
-  white-space: nowrap;
-}
-
-.checkbox-container input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.checkmark {
-  width: 16px;
-  height: 16px;
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-page);
-  border-radius: 4px;
-  margin-right: 0.35rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-}
-
-.checkbox-container input:checked ~ .checkmark {
-  background-color: #10b981;
-  border-color: #10b981;
-}
-
-.checkbox-container input:checked ~ .checkmark::after {
-  content: '✓';
-  color: white;
-  font-size: 11px;
-  font-weight: bold;
 }
 
 /* Barra de control de resultados */
@@ -1231,36 +1219,70 @@ html, body {
   line-height: 1.4;
 }
 
-.modal-sic-details {
+.modal-sic-details,
+.modal-noche-details {
   border-top: 1px solid var(--border-color);
   padding-top: 0.9rem;
 }
 
-.modal-sic-details h3 {
+.modal-sic-details h3,
+.modal-noche-details h3 {
   margin: 0 0 0.65rem;
   font-size: 0.9rem;
   color: var(--text-main);
 }
 
-.modal-sic-fields {
+.modal-noche-content {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.8fr) minmax(0, 1.2fr);
+  align-items: start;
+  gap: 1rem;
+}
+
+.modal-noche-poster {
+  display: none;
+  width: 100%;
+  max-height: 430px;
+  object-fit: contain;
+  object-position: top center;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-page);
+}
+
+.modal-noche-copy {
+  min-width: 0;
+}
+
+.modal-noche-details h4 {
+  margin: 0 0 0.75rem;
+  color: var(--primary);
+  font-size: 1rem;
+}
+
+.modal-sic-fields,
+.modal-noche-fields {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.7rem 1rem;
   margin: 0;
 }
 
-.modal-sic-fields > div {
+.modal-sic-fields > div,
+.modal-noche-fields > div {
   min-width: 0;
 }
 
-.modal-sic-fields dt {
+.modal-sic-fields dt,
+.modal-noche-fields dt {
   color: var(--text-muted);
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
 }
 
-.modal-sic-fields dd {
+.modal-sic-fields dd,
+.modal-noche-fields dd {
   margin: 0.15rem 0 0;
   color: var(--text-main);
   font-size: 0.82rem;
@@ -1394,6 +1416,14 @@ html, body {
 }
 
 @media (max-width: 600px) {
+  .modal-noche-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .modal-noche-poster {
+    max-height: 360px;
+  }
+
   .app-header {
     gap: 0.4rem;
     padding: 0 0.65rem;
