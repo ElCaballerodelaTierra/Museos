@@ -14,8 +14,10 @@ const AppState = {
   searchQuery: '',
   sortOrder: 'popular',
   showOnlyFavorites: false,
+  showOnlyVisited: false,
   userCoords: null,
   favorites: new Set(),
+  visitedMuseums: new Set(),
   markersMap: new Map(), // id -> L.Marker
   map: null,
   markersLayer: null,
@@ -159,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDOMReferences();
   initTheme();
   loadFavoritesFromStorage();
+  loadVisitedMuseumsFromStorage();
   initMap();
   initData();
   initEventHandlers();
@@ -182,6 +185,7 @@ function initDOMReferences() {
   DOM.resultsFeedback = document.getElementById('resultsFeedback');
   DOM.btnNearMe = document.getElementById('btnNearMe');
   DOM.btnFavorites = document.getElementById('btnFavorites');
+  DOM.btnVisited = document.getElementById('btnVisited');
   DOM.themeToggle = document.getElementById('themeToggle');
   DOM.themeToggleIcon = document.getElementById('themeToggleIcon');
   DOM.favCount = document.getElementById('favCount');
@@ -209,6 +213,9 @@ function initDOMReferences() {
   DOM.modalCost = document.getElementById('modalCost');
   DOM.modalTransport = document.getElementById('modalTransport');
   DOM.modalAddress = document.getElementById('modalAddress');
+  DOM.btnToggleVisited = document.getElementById('btnToggleVisited');
+  DOM.modalVisitIcon = document.getElementById('modalVisitIcon');
+  DOM.modalVisitLabel = document.getElementById('modalVisitLabel');
   DOM.btnFocusMapFromModal = document.getElementById('btnFocusMapFromModal');
   DOM.btnGoogleMapsNav = document.getElementById('btnGoogleMapsNav');
   DOM.btnOfficialWeb = document.getElementById('btnOfficialWeb');
@@ -240,6 +247,33 @@ function saveFavoritesToStorage() {
     console.warn('Error al guardar favoritos:', e);
   }
   updateFavoritesBadge();
+}
+
+function loadVisitedMuseumsFromStorage() {
+  try {
+    const saved = localStorage.getItem('museos_cdmx_visited');
+    if (saved) {
+      const ids = JSON.parse(saved);
+      if (Array.isArray(ids)) {
+        AppState.visitedMuseums = new Set(ids);
+      }
+    }
+  } catch (error) {
+    console.warn('No se pudieron cargar los museos visitados:', error);
+  }
+}
+
+function saveVisitedMuseumsToStorage() {
+  try {
+    localStorage.setItem('museos_cdmx_visited', JSON.stringify([...AppState.visitedMuseums]));
+  } catch (error) {
+    console.warn('No se pudieron guardar los museos visitados:', error);
+  }
+}
+
+function updateVisitedFilterButton() {
+  DOM.btnVisited.classList.toggle('active', AppState.showOnlyVisited);
+  DOM.btnVisited.setAttribute('aria-pressed', String(AppState.showOnlyVisited));
 }
 
 function updateFavoritesBadge() {
@@ -539,6 +573,15 @@ function initEventHandlers() {
     applyFiltersAndRender();
   });
 
+  DOM.btnVisited.addEventListener('click', () => {
+    AppState.showOnlyVisited = !AppState.showOnlyVisited;
+    updateVisitedFilterButton();
+    showToast(AppState.showOnlyVisited
+      ? 'Mostrando solo los museos visitados'
+      : 'Mostrando todos los museos');
+    applyFiltersAndRender();
+  });
+
   DOM.themeToggle.addEventListener('click', () => {
     const theme = AppState.theme === 'dark' ? 'light' : 'dark';
     setTheme(theme);
@@ -596,6 +639,11 @@ function initEventHandlers() {
 
   // Cerrar modal
   DOM.closeModalBtn.addEventListener('click', closeModal);
+  DOM.btnToggleVisited.addEventListener('click', () => {
+    if (AppState.selectedId) {
+      toggleVisitedMuseum(AppState.selectedId);
+    }
+  });
   DOM.modal.addEventListener('click', (e) => {
     if (e.target === DOM.modal) closeModal();
   });
@@ -653,6 +701,10 @@ function applyFiltersAndRender() {
 
     // Filtro de solo favoritos
     if (AppState.showOnlyFavorites && !AppState.favorites.has(museo.id)) {
+      return false;
+    }
+
+    if (AppState.showOnlyVisited && !AppState.visitedMuseums.has(museo.id)) {
       return false;
     }
 
@@ -810,6 +862,7 @@ function renderMuseumsList(museos) {
   museos.forEach(museo => {
     const isSelected = museo.id === AppState.selectedId;
     const isFavorited = AppState.favorites.has(museo.id);
+    const isVisited = AppState.visitedMuseums.has(museo.id);
     const meta = CATEGORY_META[museo.categoria] || { color: '#64748b' };
     const image = escapeHtml(museo.imagen);
     const imageFallback = escapeHtml(museo.imagenFallback);
@@ -850,10 +903,23 @@ function renderMuseumsList(museos) {
 
       <div class="card-content">
         <div>
-          <div class="card-header-tags">
-            <span class="badge badge-category" style="background-color: ${meta.color}">${category}</span>
-            ${museo.esGratis ? '<span class="badge badge-free">Gratis</span>' : ''}
-            ${distanceBadge}
+          <div class="card-heading-row">
+            <div class="card-header-tags">
+              <span class="badge badge-category" style="background-color: ${meta.color}">${category}</span>
+              ${museo.esGratis ? '<span class="badge badge-free">Gratis</span>' : ''}
+              ${distanceBadge}
+            </div>
+            <button
+              type="button"
+              class="visited-card-btn ${isVisited ? 'visited' : ''}"
+              data-action="visited"
+              aria-pressed="${isVisited}"
+              aria-label="${isVisited ? 'Quitar marca de visitado' : 'Marcar como visitado'}"
+              title="${isVisited ? 'Quitar marca de visitado' : 'Marcar como visitado'}"
+            >
+              <span data-visited-icon aria-hidden="true">${isVisited ? '✓' : '○'}</span>
+              <span data-visited-label>${isVisited ? 'Visitado' : 'Marcar visita'}</span>
+            </button>
           </div>
           <h3 class="card-title" title="${name}">${name}</h3>
           <p class="card-alcaldia">📍 ${alcaldia} · ${address}</p>
@@ -886,6 +952,12 @@ function renderMuseumsList(museos) {
       if (favBtn) {
         e.stopPropagation();
         toggleFavorite(museo.id);
+        return;
+      }
+
+      if (e.target.closest('[data-action="visited"]')) {
+        e.stopPropagation();
+        toggleVisitedMuseum(museo.id);
         return;
       }
 
@@ -978,6 +1050,7 @@ function openDetailsModal(id) {
   DOM.modalCost.textContent = museo.costo;
   DOM.modalTransport.textContent = museo.transporte;
   DOM.modalAddress.textContent = museo.direccion;
+  updateVisitedButton(id);
   renderSicDetails(museo);
 
   // Enlace a Google Maps para navegación
@@ -1095,6 +1168,49 @@ function closeModal() {
   DOM.modal.style.display = 'none';
 }
 
+function updateVisitedButton(id) {
+  const isVisited = AppState.visitedMuseums.has(id);
+  DOM.btnToggleVisited.classList.toggle('active', isVisited);
+  DOM.btnToggleVisited.setAttribute('aria-pressed', String(isVisited));
+  DOM.modalVisitIcon.textContent = isVisited ? '✓' : '○';
+  DOM.modalVisitLabel.textContent = isVisited
+    ? 'Ya visitaste este museo'
+    : 'Marcar como visitado';
+
+  const card = document.getElementById(`card-${id}`);
+  const cardButton = card && card.querySelector('[data-action="visited"]');
+  if (cardButton) {
+    cardButton.classList.toggle('visited', isVisited);
+    cardButton.setAttribute('aria-pressed', String(isVisited));
+    const label = isVisited ? 'Quitar marca de visitado' : 'Marcar como visitado';
+    cardButton.setAttribute('aria-label', label);
+    cardButton.title = label;
+    cardButton.querySelector('[data-visited-icon]').textContent = isVisited ? '✓' : '○';
+    cardButton.querySelector('[data-visited-label]').textContent = isVisited
+      ? 'Visitado'
+      : 'Marcar visita';
+  }
+}
+
+function toggleVisitedMuseum(id) {
+  const museo = AppState.museos.find(item => item.id === id);
+  if (!museo) return;
+
+  if (AppState.visitedMuseums.has(id)) {
+    AppState.visitedMuseums.delete(id);
+    showToast(`Visita eliminada: ${museo.nombre}`);
+  } else {
+    AppState.visitedMuseums.add(id);
+    showToast(`¡Museo marcado como visitado! ${museo.nombre}`);
+  }
+
+  saveVisitedMuseumsToStorage();
+  updateVisitedButton(id);
+  if (AppState.showOnlyVisited) {
+    applyFiltersAndRender();
+  }
+}
+
 /**
  * Alterna el estado de favorito de un museo
  */
@@ -1141,6 +1257,7 @@ function resetAllFilters() {
   AppState.onlyFree = false;
   AppState.searchQuery = '';
   AppState.showOnlyFavorites = false;
+  AppState.showOnlyVisited = false;
   AppState.sortOrder = 'popular';
 
   DOM.searchInput.value = '';
@@ -1149,6 +1266,7 @@ function resetAllFilters() {
   DOM.onlyFreeCheckbox.checked = false;
   DOM.sortSelect.value = 'popular';
   DOM.btnFavorites.classList.remove('active');
+  updateVisitedFilterButton();
 
   document.querySelectorAll('.chip').forEach(c => {
     c.classList.toggle('active', c.dataset.category === 'all');

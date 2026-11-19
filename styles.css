@@ -625,12 +625,53 @@ html, body {
   min-width: 0;
 }
 
+.card-heading-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
+  flex-wrap: wrap;
+}
+
 .card-header-tags {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  margin-bottom: 0.25rem;
   flex-wrap: wrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.visited-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  background-color: var(--surface-control);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.visited-card-btn:hover {
+  border-color: var(--success-text);
+  color: var(--success-text);
+}
+
+.visited-card-btn.visited {
+  background-color: var(--success-bg);
+  border-color: var(--success-text);
+  color: var(--success-text);
 }
 
 .badge {
@@ -1135,6 +1176,16 @@ html, body {
   color: var(--text-strong);
 }
 
+.modal-visit-button {
+  align-self: flex-start;
+}
+
+.modal-visit-button.active {
+  background-color: var(--success-bg);
+  border-color: var(--success-text);
+  color: var(--success-text);
+}
+
 .modal-highlight-box {
   display: flex;
   gap: 0.75rem;
@@ -1320,6 +1371,14 @@ html, body {
   }
 
   /* Control de alternancia de vista en móvil */
+  .map-floating-controls {
+    display: none;
+  }
+
+  body.view-map .map-floating-controls {
+    display: flex;
+  }
+
   body.view-map .sidebar {
     transform: translateX(-100%);
     pointer-events: none;
@@ -1372,6 +1431,7 @@ html, body {
 
   #btnNearMe,
   #btnFavorites,
+  #btnVisited,
   .theme-toggle {
     width: 34px;
     min-width: 34px;
@@ -1381,7 +1441,8 @@ html, body {
   }
 
   #btnNearMe span,
-  #favLabel {
+  #favLabel,
+  #visitedLabel {
     display: none;
   }
 
