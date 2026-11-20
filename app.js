@@ -345,6 +345,11 @@ function savePlannedMuseumsToStorage() {
   updatePlannedBadge();
 }
 
+function updateFavoritesFilterButton() {
+  DOM.btnFavorites.classList.toggle('active', AppState.showOnlyFavorites);
+  DOM.btnFavorites.setAttribute('aria-pressed', String(AppState.showOnlyFavorites));
+}
+
 function updateVisitedFilterButton() {
   DOM.btnVisited.classList.toggle('active', AppState.showOnlyVisited);
   DOM.btnVisited.setAttribute('aria-pressed', String(AppState.showOnlyVisited));
@@ -353,6 +358,19 @@ function updateVisitedFilterButton() {
 function updatePlannedFilterButton() {
   DOM.btnPlanned.classList.toggle('active', AppState.showOnlyPlanned);
   DOM.btnPlanned.setAttribute('aria-pressed', String(AppState.showOnlyPlanned));
+}
+
+function updateCollectionMenuButton() {
+  const isAnyActive = AppState.showOnlyFavorites || AppState.showOnlyVisited || AppState.showOnlyPlanned;
+  DOM.btnCollectionMenu.classList.toggle('active', isAnyActive);
+  DOM.btnCollectionMenu.setAttribute('aria-pressed', String(isAnyActive));
+}
+
+function updateAllCollectionFilterButtons() {
+  updateFavoritesFilterButton();
+  updateVisitedFilterButton();
+  updatePlannedFilterButton();
+  updateCollectionMenuButton();
 }
 
 function updateVisitedBadge() {
@@ -594,9 +612,7 @@ function clearAccountCache() {
   AppState.showOnlyFavorites = false;
   AppState.showOnlyVisited = false;
   AppState.showOnlyPlanned = false;
-  DOM.btnFavorites.classList.remove('active');
-  updateVisitedFilterButton();
-  updatePlannedFilterButton();
+  updateAllCollectionFilterButtons();
   try {
     localStorage.removeItem(ACCOUNT_CACHE_USER_KEY);
   } catch (error) {
@@ -1185,30 +1201,39 @@ function initEventHandlers() {
   DOM.btnFavorites.addEventListener('click', () => {
     AppState.showOnlyFavorites = !AppState.showOnlyFavorites;
     if (AppState.showOnlyFavorites) {
-      DOM.btnFavorites.classList.add('active');
+      AppState.showOnlyVisited = false;
+      AppState.showOnlyPlanned = false;
       showToast('Mostrando solo tus museos favoritos ❤️');
     } else {
-      DOM.btnFavorites.classList.remove('active');
       showToast('Mostrando todos los museos');
     }
+    updateAllCollectionFilterButtons();
     applyFiltersAndRender();
   });
 
   DOM.btnVisited.addEventListener('click', () => {
     AppState.showOnlyVisited = !AppState.showOnlyVisited;
-    updateVisitedFilterButton();
-    showToast(AppState.showOnlyVisited
-      ? 'Mostrando solo los museos visitados'
-      : 'Mostrando todos los museos');
+    if (AppState.showOnlyVisited) {
+      AppState.showOnlyFavorites = false;
+      AppState.showOnlyPlanned = false;
+      showToast('Mostrando solo los museos visitados');
+    } else {
+      showToast('Mostrando todos los museos');
+    }
+    updateAllCollectionFilterButtons();
     applyFiltersAndRender();
   });
 
   DOM.btnPlanned.addEventListener('click', () => {
     AppState.showOnlyPlanned = !AppState.showOnlyPlanned;
-    updatePlannedFilterButton();
-    showToast(AppState.showOnlyPlanned
-      ? 'Mostrando solo los museos por visitar'
-      : 'Mostrando todos los museos');
+    if (AppState.showOnlyPlanned) {
+      AppState.showOnlyFavorites = false;
+      AppState.showOnlyVisited = false;
+      showToast('Mostrando solo los museos por visitar');
+    } else {
+      showToast('Mostrando todos los museos');
+    }
+    updateAllCollectionFilterButtons();
     applyFiltersAndRender();
   });
 
@@ -1346,8 +1371,8 @@ function applyFiltersAndRender() {
       } else {
         const freeDays = getMuseumFreeAdmissionDays(museo);
         const hasFreeAdmission = AppState.freeAdmissionDay === 'all'
-          ? freeDays.size > 0
-          : freeDays.has('all') || freeDays.has(AppState.freeAdmissionDay);
+          ? Boolean(museo.esGratis)
+          : freeDays.has(AppState.freeAdmissionDay);
         const isOpen = isMuseumOpenOnDay(museo, AppState.freeAdmissionDay);
         if (!hasFreeAdmission || !isOpen) return false;
       }
@@ -1598,9 +1623,13 @@ function renderMuseumsList(museos) {
         <button 
           class="fav-btn ${isFavorited ? 'favorited' : ''}" 
           title="${isFavorited ? 'Quitar de favoritos' : 'Guardar en favoritos'}"
+          aria-label="${isFavorited ? 'Quitar de favoritos' : 'Guardar en favoritos'}"
+          aria-pressed="${isFavorited}"
           data-fav-id="${museo.id}"
         >
-          ${isFavorited ? '❤️' : '🤍'}
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
         </button>
       </div>
 
@@ -1612,7 +1641,11 @@ function renderMuseumsList(museos) {
                 <span class="badge-category-label">${escapeHtml(meta.icon)} ${category}</span>
                 <span class="badge-category-icon" aria-hidden="true">${escapeHtml(meta.icon)}</span>
               </span>
-              ${museo.esGratis ? '<span class="badge badge-free">Gratis</span>' : ''}
+              ${museo.esGratis ? `
+                <span class="badge badge-free" title="Gratis" aria-label="Gratis">
+                  <span class="badge-free-label">Gratis</span>
+                  <span class="badge-free-icon" aria-hidden="true">🆓</span>
+                </span>` : ''}
               ${distanceBadge}
             </div>
             <div class="card-marker-actions">
@@ -1853,7 +1886,7 @@ function getMuseumFreeAdmissionDays(museo) {
   }
 
   const freeDays = new Set([...allWeekdays].filter(day => new RegExp(`\\b${day}s?\\b`).test(cost)));
-  return freeDays.size ? freeDays : allWeekdays;
+  return freeDays;
 }
 
 function isMuseumOpenOnDay(museo, day) {
@@ -2145,9 +2178,7 @@ function resetAllFilters() {
   DOM.clearSearchBtn.style.display = 'none';
   updateCategoryFilterButton();
   updateFreeEntryButton();
-  DOM.btnFavorites.classList.remove('active');
-  updateVisitedFilterButton();
-  updatePlannedFilterButton();
+  updateAllCollectionFilterButtons();
   updateNocheMuseosButton();
 
   applyFiltersAndRender();

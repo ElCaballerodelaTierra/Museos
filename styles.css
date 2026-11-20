@@ -688,10 +688,14 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  color: var(--text-muted);
+  color: #ffffff;
   transition: all 0.15s ease;
   z-index: 5;
+}
+
+.fav-btn svg {
+  display: block;
+  pointer-events: none;
 }
 
 .fav-btn:hover {
@@ -820,6 +824,33 @@ html, body {
   text-transform: none;
 }
 
+.badge-free {
+  background-color: var(--success-bg);
+  color: var(--success-text);
+}
+
+.badge-free-icon {
+  display: none;
+}
+
+@container card-heading (max-width: 270px) {
+  .badge-free {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-right: 0.35rem;
+    padding-left: 0.35rem;
+  }
+
+  .badge-free-label {
+    display: none;
+  }
+
+  .badge-free-icon {
+    display: inline;
+  }
+}
+
 @container card-heading (max-width: 245px) {
   .badge-category {
     display: inline-flex;
@@ -836,11 +867,22 @@ html, body {
   .badge-category-icon {
     display: inline;
   }
-}
 
-.badge-free {
-  background-color: var(--success-bg);
-  color: var(--success-text);
+  .badge-free {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-right: 0.35rem;
+    padding-left: 0.35rem;
+  }
+
+  .badge-free-label {
+    display: none;
+  }
+
+  .badge-free-icon {
+    display: inline;
+  }
 }
 
 .badge-distance {
@@ -880,7 +922,7 @@ html, body {
   font-size: 0.74rem;
   color: var(--card-highlight-text);
   background-color: var(--card-highlight-bg);
-  padding: 0.25rem 0.45rem;
+  padding: 0.2rem 0.35rem;
   border-radius: var(--radius-sm);
   margin-bottom: 0.5rem;
   line-height: 1.3;
@@ -1582,6 +1624,22 @@ html, body {
   .header-menu-panel .header-action-label,
   .header-menu-panel .account-button > span,
   .header-menu-panel .header-menu-item-label {
+    display: inline;
+  }
+
+  .card-header-tags .badge-free {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-right: 0.35rem;
+    padding-left: 0.35rem;
+  }
+
+  .badge-free-label {
+    display: none;
+  }
+
+  .badge-free-icon {
     display: inline;
   }
 
