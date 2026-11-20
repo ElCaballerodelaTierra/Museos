@@ -130,6 +130,13 @@ html, body {
   display: flex;
   align-items: center;
   gap: 0.85rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.header-brand > div:last-child {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .logo-icon {
@@ -143,6 +150,7 @@ html, body {
   justify-content: center;
   border-radius: var(--radius-md);
   border: 1px solid var(--logo-border);
+  flex-shrink: 0;
 }
 
 .app-title {
@@ -150,24 +158,55 @@ html, body {
   font-weight: 800;
   color: var(--text-main);
   letter-spacing: -0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-subtitle {
   font-size: 0.78rem;
   color: var(--text-muted);
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.header-menu {
+  display: contents;
+}
+
+.header-menu .header-menu-trigger {
+  display: none;
+}
+
+.header-menu-item-label {
+  display: none;
+}
+
+.header-menu-panel {
+  display: contents;
+}
+
+.header-menu-panel > .btn {
+  align-self: stretch;
+}
+
+.header-actions > .btn {
+  align-self: stretch;
 }
 
 .stats-badge {
   background-color: var(--bg-page);
   border: 1px solid var(--border-color);
-  padding: 0.35rem 0.75rem;
+  padding: 0.35rem 0.25rem 0.35rem 0.75rem;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -382,7 +421,7 @@ html, body {
 }
 
 .search-section {
-  padding: 1rem 1.15rem 0.85rem;
+  padding: 1rem 1.15rem 0.5rem;
   border-bottom: 1px solid var(--border-color);
   background: var(--bg-card);
   display: flex;
@@ -474,22 +513,17 @@ html, body {
   line-height: 1;
 }
 
-/* Chips de Categorías */
 .categories-scroll {
+  min-width: 0;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
-  overflow-x: auto;
+  overflow: visible;
   padding-bottom: 0.25rem;
-  scrollbar-width: thin;
 }
 
-.categories-scroll::-webkit-scrollbar {
-  height: 4px;
-}
-
-.categories-scroll::-webkit-scrollbar-thumb {
-  background-color: var(--border-color);
-  border-radius: 4px;
+.categories-scroll[hidden] {
+  display: none;
 }
 
 .chip {
@@ -529,55 +563,45 @@ html, body {
   display: none;
 }
 
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+  flex: 1 0 100%;
+}
+
+.filter-options[hidden] {
+  display: none;
+}
+
 /* Barra de control de resultados */
 .list-controls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas:
-    "free sort"
-    "results results";
-  align-items: center;
-  gap: 0.35rem 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.35rem 0.5rem;
   font-size: 0.75rem;
   color: var(--text-muted);
 }
 
 .results-feedback {
-  grid-area: results;
+  flex: 1 0 100%;
   min-width: 0;
   font-weight: 600;
   color: var(--text-muted);
   text-align: center;
+  font-size: 0.75rem;
+}
+
+.category-toggle {
+  flex: 0 0 auto;
+  flex-shrink: 0;
 }
 
 .free-entry-toggle {
-  grid-area: free;
-  justify-self: start;
+  flex: 0 0 auto;
   flex-shrink: 0;
-}
-
-.sort-wrapper {
-  grid-area: sort;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex-shrink: 0;
-  justify-self: end;
-}
-
-.sort-wrapper label {
-  white-space: nowrap;
-}
-
-.sort-select {
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--primary);
-  cursor: pointer;
-  outline: none;
 }
 
 /* Lista con Scroll */
@@ -689,8 +713,9 @@ html, body {
 }
 
 .card-heading-row {
+  container: card-heading / inline-size;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 0.4rem;
   margin-bottom: 0.25rem;
@@ -787,6 +812,32 @@ html, body {
   color: #ffffff;
 }
 
+.badge-category-icon {
+  display: none;
+}
+
+.badge-category-label {
+  text-transform: none;
+}
+
+@container card-heading (max-width: 245px) {
+  .badge-category {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-right: 0.35rem;
+    padding-left: 0.35rem;
+  }
+
+  .badge-category-label {
+    display: none;
+  }
+
+  .badge-category-icon {
+    display: inline;
+  }
+}
+
 .badge-free {
   background-color: var(--success-bg);
   color: var(--success-text);
@@ -818,6 +869,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  padding-left: 0.45rem;
   margin-bottom: 0.35rem;
   white-space: nowrap;
   overflow: hidden;
@@ -1232,6 +1284,10 @@ html, body {
   gap: 0.5rem;
 }
 
+.modal-category-badge {
+  text-transform: none;
+}
+
 .modal-image-credit {
   position: absolute;
   right: 1rem;
@@ -1486,6 +1542,62 @@ html, body {
     display: none;
   }
 
+  .header-menu {
+    display: block;
+    position: relative;
+  }
+
+  .header-menu .header-menu-trigger {
+    display: inline-flex;
+  }
+
+  #btnNearMe,
+  .header-menu .header-menu-trigger {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    padding: 0;
+  }
+
+  .header-menu-panel {
+    display: none;
+  }
+
+  .header-menu-panel.is-open {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 190px;
+    padding: 0.45rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .header-menu-panel .header-action-label,
+  .header-menu-panel .account-button > span,
+  .header-menu-panel .header-menu-item-label {
+    display: inline;
+  }
+
+  #collectionMenuPanel > #btnFavorites,
+  #collectionMenuPanel > #btnVisited,
+  #collectionMenuPanel > #btnPlanned,
+  #moreMenuPanel > #btnAccount,
+  #moreMenuPanel > #themeToggle {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 40px;
+    justify-content: flex-start;
+    padding: 0.5rem 0.7rem;
+  }
+
   .mobile-view-toggle {
     display: flex;
   }
@@ -1535,40 +1647,31 @@ html, body {
   }
 }
 
+@media (max-width: 1100px) {
+  .app-subtitle {
+    display: none;
+  }
+}
+
+@media (max-width: 1050px) {
+  .header-action-label {
+    display: none;
+  }
+}
+
 @media (max-width: 600px) {
   .list-controls {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.35rem 0.3rem;
+    gap: 0.4rem 0.5rem;
   }
 
-  .sort-wrapper {
-    flex: 1 1 0;
-    max-width: 120px;
-    min-width: 0;
-    gap: 0;
-    justify-self: auto;
+  .category-toggle,
+  .free-entry-toggle {
+    padding: 0.3rem 0.45rem;
+    font-size: 0.68rem;
   }
 
   .results-feedback {
-    flex: 1 0 100%;
-  }
-
-  .sort-wrapper label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
-  .sort-select {
     width: 100%;
-    min-width: 0;
-    font-size: 0.6rem;
   }
 
   .modal-noche-content {
@@ -1619,19 +1722,13 @@ html, body {
   #btnVisited,
   #btnPlanned,
   #btnAccount,
+  .header-menu .header-menu-trigger,
   .theme-toggle {
-    width: 34px;
+    width: auto;
     min-width: 34px;
     height: 34px;
     flex-shrink: 0;
-    padding: 0;
-  }
-
-  #btnNearMe span,
-  #favLabel,
-  #visitedLabel,
-  #plannedLabel {
-    display: none;
+    padding: 0 0.45rem;
   }
 
   .mobile-view-toggle {
@@ -1646,30 +1743,28 @@ html, body {
 }
 
 @media (max-width: 360px) {
-  #btnNearMe,
-  #btnFavorites {
+  #btnNearMe {
     display: none;
   }
 
   .app-header {
-    gap: 0.15rem;
-    padding: 0 0.45rem;
+    gap: 0;
+    padding: 0 0.25rem;
   }
 
   .header-actions {
-    gap: 0.1rem;
+    gap: 0;
   }
 
-  #themeToggle {
-    display: none;
-  }
-
+  #btnFavorites,
   #btnVisited,
   #btnPlanned,
-  #btnAccount {
-    width: 30px;
+  #btnAccount,
+  .header-menu .header-menu-trigger {
+    width: auto;
     min-width: 30px;
     height: 30px;
+    padding: 0 0.25rem;
   }
 
   .mobile-view-toggle {
@@ -1683,6 +1778,68 @@ html, body {
   .toggle-btn {
     padding: 0.2rem 0.25rem;
     font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .mobile-view-toggle {
+    display: none;
+  }
+
+  .app-container {
+    display: flex;
+    height: calc(100vh - 60px);
+  }
+
+  .sidebar {
+    position: relative;
+    top: auto;
+    left: auto;
+    display: block;
+    flex: 0 0 50%;
+    width: 50%;
+    min-width: 0;
+    max-width: none;
+    height: 100%;
+    transform: none;
+    transition: none;
+    pointer-events: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  body.view-map .sidebar,
+  body.view-sidebar .sidebar {
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .search-section {
+    max-height: none;
+    overflow: visible;
+    padding: 0.45rem 0.55rem;
+    gap: 0.3rem;
+  }
+
+  .categories-scroll {
+    flex-shrink: 0;
+  }
+
+  .museums-list {
+    flex: none;
+    overflow: visible;
+    padding: 0.45rem;
+    gap: 0.5rem;
+  }
+
+  .map-wrapper {
+    flex: 0 0 50%;
+    width: 50%;
+    min-width: 0;
+  }
+
+  .map-floating-controls {
+    display: flex;
   }
 }
 

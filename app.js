@@ -9,6 +9,8 @@ const AppState = {
   filteredMuseos: [],
   selectedId: null,
   activeCategory: 'all',
+  showCategoryOptions: false,
+  showFreeEntryOptions: false,
   onlyFree: false,
   freeAdmissionDay: 'all',
   searchQuery: '',
@@ -195,13 +197,19 @@ function initDOMReferences() {
   DOM.searchInput = document.getElementById('searchInput');
   DOM.clearSearchBtn = document.getElementById('clearSearchBtn');
   DOM.categoryChips = document.getElementById('categoryChips');
+  DOM.btnCategoryToggle = document.getElementById('btnCategoryToggle');
   DOM.btnOnlyFree = document.getElementById('btnOnlyFree');
+  DOM.filterOptions = document.getElementById('filterOptions');
   DOM.freeEntryDayOptions = document.getElementById('freeEntryDayOptions');
-  DOM.sortSelect = document.getElementById('sortSelect');
-  DOM.sortDistanceOption = document.getElementById('sortDistanceOption');
   DOM.visibleCount = document.getElementById('visibleCount');
   DOM.resultsFeedback = document.getElementById('resultsFeedback');
   DOM.btnNearMe = document.getElementById('btnNearMe');
+  DOM.collectionMenu = document.getElementById('collectionMenu');
+  DOM.btnCollectionMenu = document.getElementById('btnCollectionMenu');
+  DOM.collectionMenuPanel = document.getElementById('collectionMenuPanel');
+  DOM.moreMenu = document.getElementById('moreMenu');
+  DOM.btnMoreMenu = document.getElementById('btnMoreMenu');
+  DOM.moreMenuPanel = document.getElementById('moreMenuPanel');
   DOM.btnFavorites = document.getElementById('btnFavorites');
   DOM.btnVisited = document.getElementById('btnVisited');
   DOM.btnPlanned = document.getElementById('btnPlanned');
@@ -372,16 +380,37 @@ function updateNocheMuseosButton() {
   DOM.btnNocheMuseos.setAttribute('aria-pressed', String(AppState.showOnlyNocheMuseos));
 }
 
+function updateCategoryFilterButton() {
+  const isExpanded = AppState.showCategoryOptions;
+  DOM.btnCategoryToggle.classList.toggle(
+    'active',
+    isExpanded || AppState.activeCategory !== 'all'
+  );
+  DOM.btnCategoryToggle.setAttribute('aria-expanded', String(isExpanded));
+  DOM.categoryChips.hidden = !isExpanded;
+  updateFilterOptionsVisibility();
+  DOM.categoryChips.querySelectorAll('[data-category]').forEach(button => {
+    const isActive = button.dataset.category === AppState.activeCategory;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+}
+
 function updateFreeEntryButton() {
   DOM.btnOnlyFree.classList.toggle('active', AppState.onlyFree);
   DOM.btnOnlyFree.setAttribute('aria-pressed', String(AppState.onlyFree));
-  DOM.btnOnlyFree.setAttribute('aria-expanded', String(AppState.onlyFree));
-  DOM.freeEntryDayOptions.hidden = !AppState.onlyFree;
+  DOM.btnOnlyFree.setAttribute('aria-expanded', String(AppState.showFreeEntryOptions));
+  DOM.freeEntryDayOptions.hidden = !AppState.showFreeEntryOptions;
+  updateFilterOptionsVisibility();
   DOM.freeEntryDayOptions.querySelectorAll('[data-free-day]').forEach(button => {
     const isActive = button.dataset.freeDay === AppState.freeAdmissionDay;
     button.classList.toggle('active', isActive);
     button.setAttribute('aria-pressed', String(isActive));
   });
+}
+
+function updateFilterOptionsVisibility() {
+  DOM.filterOptions.hidden = !AppState.showCategoryOptions && !AppState.showFreeEntryOptions;
 }
 
 function findMuseumById(id) {
@@ -1057,10 +1086,40 @@ function handleMuseumImageError(image) {
   image.src = FALLBACK_IMAGE_URL;
 }
 
+function closeHeaderMenus() {
+  DOM.collectionMenuPanel.classList.remove('is-open');
+  DOM.moreMenuPanel.classList.remove('is-open');
+  DOM.btnCollectionMenu.setAttribute('aria-expanded', 'false');
+  DOM.btnMoreMenu.setAttribute('aria-expanded', 'false');
+}
+
+function toggleHeaderMenu(menu, button) {
+  const shouldOpen = !menu.classList.contains('is-open');
+  closeHeaderMenus();
+  if (!shouldOpen) return;
+
+  menu.classList.add('is-open');
+  button.setAttribute('aria-expanded', 'true');
+}
+
 /**
  * Configura los escuchadores de eventos
  */
 function initEventHandlers() {
+  DOM.btnCollectionMenu.addEventListener('click', () => {
+    toggleHeaderMenu(DOM.collectionMenuPanel, DOM.btnCollectionMenu);
+  });
+  DOM.btnMoreMenu.addEventListener('click', () => {
+    toggleHeaderMenu(DOM.moreMenuPanel, DOM.btnMoreMenu);
+  });
+
+  DOM.collectionMenuPanel.addEventListener('click', event => {
+    if (event.target.closest('button')) closeHeaderMenus();
+  });
+  DOM.moreMenuPanel.addEventListener('click', event => {
+    if (event.target.closest('button')) closeHeaderMenus();
+  });
+
   // Búsqueda de texto instantánea
   DOM.searchInput.addEventListener('input', (e) => {
     AppState.searchQuery = e.target.value.trim().toLowerCase();
@@ -1080,18 +1139,32 @@ function initEventHandlers() {
   DOM.categoryChips.addEventListener('click', (e) => {
     const chip = e.target.closest('.chip');
     if (!chip) return;
-    
-    DOM.categoryChips.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    
+
     AppState.activeCategory = chip.dataset.category;
+    updateCategoryFilterButton();
     applyFiltersAndRender();
+  });
+
+  DOM.btnCategoryToggle.addEventListener('click', () => {
+    AppState.showCategoryOptions = !AppState.showCategoryOptions;
+    if (AppState.showCategoryOptions) {
+      AppState.showFreeEntryOptions = false;
+    }
+    updateCategoryFilterButton();
+    updateFreeEntryButton();
   });
 
   // Filtro de entrada libre
   DOM.btnOnlyFree.addEventListener('click', () => {
-    AppState.onlyFree = !AppState.onlyFree;
-    if (!AppState.onlyFree) AppState.freeAdmissionDay = 'all';
+    AppState.showFreeEntryOptions = !AppState.showFreeEntryOptions;
+    if (AppState.showFreeEntryOptions) {
+      AppState.showCategoryOptions = false;
+      AppState.onlyFree = true;
+    } else {
+      AppState.onlyFree = false;
+      AppState.freeAdmissionDay = 'all';
+    }
+    updateCategoryFilterButton();
     updateFreeEntryButton();
     applyFiltersAndRender();
   });
@@ -1102,12 +1175,6 @@ function initEventHandlers() {
 
     AppState.freeAdmissionDay = button.dataset.freeDay;
     updateFreeEntryButton();
-    applyFiltersAndRender();
-  });
-
-  // Ordenamiento
-  DOM.sortSelect.addEventListener('change', (e) => {
-    AppState.sortOrder = e.target.value;
     applyFiltersAndRender();
   });
 
@@ -1173,6 +1240,10 @@ function initEventHandlers() {
   });
 
   document.addEventListener('click', (e) => {
+    if (!DOM.collectionMenu.contains(e.target) && !DOM.moreMenu.contains(e.target)) {
+      closeHeaderMenus();
+    }
+
     if (!DOM.layerDropdown.contains(e.target) && e.target !== DOM.btnLayerToggle) {
       DOM.layerDropdown.classList.remove('show');
     }
@@ -1221,6 +1292,7 @@ function initEventHandlers() {
     if (e.target === DOM.modal) closeModal();
   });
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeHeaderMenus();
     if (e.key === 'Escape' && DOM.modal.style.display !== 'none') {
       closeModal();
     }
@@ -1456,7 +1528,7 @@ function renderMuseumsList(museos) {
     const isFavorited = AppState.favorites.has(museo.id);
     const isVisited = AppState.visitedMuseums.has(museo.id);
     const isPlanned = AppState.plannedMuseums.has(museo.id);
-    const meta = CATEGORY_META[museo.categoria] || { color: '#64748b' };
+    const meta = CATEGORY_META[museo.categoria] || { color: '#64748b', icon: '🏛️' };
     const eventPoster = AppState.showOnlyNocheMuseos && museo.nocheMuseos && museo.nocheMuseos.image;
     const image = escapeHtml(eventPoster || museo.imagen);
     const imageFallback = escapeHtml(eventPoster ? museo.imagen : museo.imagenFallback);
@@ -1478,7 +1550,7 @@ function renderMuseumsList(museos) {
     const distanceBadge = museo.distance !== null 
       ? `<span class="badge-distance">📍 ${museo.distance < 1 ? Math.round(museo.distance * 1000) + ' m' : museo.distance.toFixed(1) + ' km'}</span>` 
       : '';
-    const visitedButton = museo.isNocheMuseosOnly ? '' : `
+    const visitedButton = `
       <button
         type="button"
         class="visited-card-btn ${isVisited ? 'visited' : ''}"
@@ -1490,7 +1562,7 @@ function renderMuseumsList(museos) {
         <span data-visited-icon aria-hidden="true">${isVisited ? '✓' : '○'}</span>
         <span data-visited-label>${isVisited ? 'Visitado' : 'Marcar visita'}</span>
       </button>`;
-    const plannedButton = museo.isNocheMuseosOnly ? '' : `
+    const plannedButton = `
       <button
         type="button"
         class="planned-card-btn ${isPlanned ? 'planned' : ''}"
@@ -1536,7 +1608,10 @@ function renderMuseumsList(museos) {
         <div>
           <div class="card-heading-row">
             <div class="card-header-tags">
-              <span class="badge badge-category" style="background-color: ${meta.color}">${category}</span>
+              <span class="badge badge-category" style="background-color: ${meta.color}" aria-label="${category}" title="${category}">
+                <span class="badge-category-label">${escapeHtml(meta.icon)} ${category}</span>
+                <span class="badge-category-icon" aria-hidden="true">${escapeHtml(meta.icon)}</span>
+              </span>
               ${museo.esGratis ? '<span class="badge badge-free">Gratis</span>' : ''}
               ${distanceBadge}
             </div>
@@ -1662,8 +1737,8 @@ function openDetailsModal(id) {
   DOM.modalImage.dataset.fallback = museo.imagenFallback;
   DOM.modalImage.onerror = () => handleMuseumImageError(DOM.modalImage);
 
-  const meta = CATEGORY_META[museo.categoria] || { color: '#64748b' };
-  DOM.modalCategory.textContent = museo.categoria;
+  const meta = CATEGORY_META[museo.categoria] || { color: '#64748b', icon: '🏛️' };
+  DOM.modalCategory.textContent = `${meta.icon} ${museo.categoria}`;
   DOM.modalCategory.style.backgroundColor = meta.color;
 
   DOM.modalFreeBadge.style.display = museo.esGratis ? 'inline-block' : 'none';
@@ -1678,8 +1753,8 @@ function openDetailsModal(id) {
   DOM.modalCost.textContent = museo.costo;
   DOM.modalTransport.textContent = museo.transporte;
   DOM.modalAddress.textContent = museo.direccion;
-  DOM.btnToggleVisited.style.display = museo.isNocheMuseosOnly ? 'none' : '';
-  if (!museo.isNocheMuseosOnly) updateVisitedButton(id);
+  DOM.btnToggleVisited.style.display = '';
+  updateVisitedButton(id);
   renderNocheMuseosDetails(museo);
   renderSicDetails(museo);
 
@@ -1953,7 +2028,7 @@ function updateVisitedButton(id) {
 
 async function toggleVisitedMuseum(id) {
   const museo = findMuseumById(id);
-  if (!museo || museo.isNocheMuseosOnly) return;
+  if (!museo) return;
 
   const isVisited = AppState.visitedMuseums.has(id);
   if (!await persistAccountMarker(id, 'visited', !isVisited)) return;
@@ -1989,7 +2064,7 @@ function updatePlannedButton(id) {
 
 async function togglePlannedMuseum(id) {
   const museo = findMuseumById(id);
-  if (!museo || museo.isNocheMuseosOnly) return;
+  if (!museo) return;
 
   const isPlanned = AppState.plannedMuseums.has(id);
   if (!await persistAccountMarker(id, 'planned', !isPlanned)) return;
@@ -2054,6 +2129,8 @@ function fitMapToMarkers() {
  */
 function resetAllFilters() {
   AppState.activeCategory = 'all';
+  AppState.showCategoryOptions = false;
+  AppState.showFreeEntryOptions = false;
   AppState.onlyFree = false;
   AppState.freeAdmissionDay = 'all';
   AppState.freeAdmissionDay = 'all';
@@ -2066,16 +2143,12 @@ function resetAllFilters() {
 
   DOM.searchInput.value = '';
   DOM.clearSearchBtn.style.display = 'none';
+  updateCategoryFilterButton();
   updateFreeEntryButton();
-  DOM.sortSelect.value = 'name-asc';
   DOM.btnFavorites.classList.remove('active');
   updateVisitedFilterButton();
   updatePlannedFilterButton();
   updateNocheMuseosButton();
-
-  DOM.categoryChips.querySelectorAll('.chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.category === 'all');
-  });
 
   applyFiltersAndRender();
   fitMapToMarkers();
@@ -2131,9 +2204,7 @@ function handleUserGeolocation() {
         .addTo(AppState.map)
         .bindPopup('<strong>Tu ubicación actual</strong>');
 
-      // Habilitar y seleccionar orden por distancia
-      DOM.sortDistanceOption.disabled = false;
-      DOM.sortSelect.value = 'distance';
+      // Priorizar los museos más cercanos cuando se obtiene la ubicación.
       AppState.sortOrder = 'distance';
 
       DOM.btnNearMe.classList.add('active');

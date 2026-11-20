@@ -36,47 +36,68 @@
         <span class="stats-label">museos visibles</span>
       </div>
       
-      <button class="btn btn-outline" id="btnNearMe" title="Calcular museos más cercanos">
+      <button class="btn btn-outline" id="btnNearMe" title="Calcular museos más cercanos" aria-label="Calcular museos más cercanos">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"></circle>
           <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
         </svg>
-        <span>Cerca de mí</span>
+        <span class="header-action-label">Cerca de mí</span>
       </button>
 
-      <button class="btn btn-outline" id="btnFavorites" title="Ver museos favoritos guardados">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-        </svg>
-        <span id="favLabel">Favoritos<span id="favCountWrapper" hidden> (<span id="favCount">0</span>)</span></span>
-      </button>
+      <div class="header-menu" id="collectionMenu">
+        <button class="btn btn-outline header-menu-trigger" id="btnCollectionMenu" type="button" aria-label="Mi colección" title="Mi colección" aria-haspopup="true" aria-expanded="false" aria-controls="collectionMenuPanel">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+        </button>
+        <div class="header-menu-panel" id="collectionMenuPanel" role="group" aria-label="Filtros de colección">
+          <button class="btn btn-outline" id="btnFavorites" title="Ver museos favoritos guardados" aria-label="Ver museos favoritos guardados">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+            <span id="favLabel"><span class="header-action-label">Favoritos</span><span id="favCountWrapper" hidden> (<span id="favCount">0</span>)</span></span>
+          </button>
 
-      <button class="btn btn-outline" id="btnVisited" type="button" title="Filtrar museos visitados" aria-label="Filtrar museos visitados" aria-pressed="false">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="m9 12 2 2 4-4"></path>
-        </svg>
-        <span id="visitedLabel">Visitados</span><span id="visitedCountWrapper" hidden> (<span id="visitedCount">0</span>)</span>
-      </button>
+          <button class="btn btn-outline" id="btnVisited" type="button" title="Filtrar museos visitados" aria-label="Filtrar museos visitados" aria-pressed="false">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="m9 12 2 2 4-4"></path>
+            </svg>
+            <span id="visitedLabel" class="header-action-label">Visitados</span><span id="visitedCountWrapper" hidden> (<span id="visitedCount">0</span>)</span>
+          </button>
 
-      <button class="btn btn-outline" id="btnPlanned" type="button" title="Filtrar museos por visitar" aria-label="Filtrar museos por visitar" aria-pressed="false">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4V4.75Z"></path>
-        </svg>
-        <span id="plannedLabel">Por visitar<span id="plannedCountWrapper" hidden> (<span id="plannedCount">0</span>)</span></span>
-      </button>
+          <button class="btn btn-outline" id="btnPlanned" type="button" title="Filtrar museos por visitar" aria-label="Filtrar museos por visitar" aria-pressed="false">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4V4.75Z"></path>
+            </svg>
+            <span id="plannedLabel"><span class="header-action-label">Por visitar</span><span id="plannedCountWrapper" hidden> (<span id="plannedCount">0</span>)</span></span>
+          </button>
+        </div>
+      </div>
 
-      <button class="btn btn-outline account-button" id="btnAccount" type="button" aria-label="Cuenta y sincronización" title="Cuenta y sincronización">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="8" r="4"></circle>
-          <path d="M5 21a7 7 0 0 1 14 0"></path>
-        </svg>
-        <span id="accountButtonLabel">Cuenta</span>
-      </button>
+      <div class="header-menu" id="moreMenu">
+        <button class="btn btn-outline header-menu-trigger" id="btnMoreMenu" type="button" aria-label="Más opciones" title="Más opciones" aria-haspopup="true" aria-expanded="false" aria-controls="moreMenuPanel">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <circle cx="12" cy="5" r="2"></circle>
+            <circle cx="12" cy="12" r="2"></circle>
+            <circle cx="12" cy="19" r="2"></circle>
+          </svg>
+        </button>
+        <div class="header-menu-panel" id="moreMenuPanel" role="group" aria-label="Más opciones">
+          <button class="btn btn-outline account-button" id="btnAccount" type="button" aria-label="Cuenta y sincronización" title="Cuenta y sincronización">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M5 21a7 7 0 0 1 14 0"></path>
+            </svg>
+            <span id="accountButtonLabel" class="header-action-label">Cuenta</span>
+          </button>
 
-      <button class="btn btn-outline theme-toggle" id="themeToggle" type="button" aria-label="Cambiar a tema oscuro" title="Cambiar a tema oscuro" aria-pressed="false">
-        <span class="theme-toggle-icon" id="themeToggleIcon" aria-hidden="true">🌙</span>
-      </button>
+          <button class="btn btn-outline theme-toggle" id="themeToggle" type="button" aria-label="Cambiar a tema oscuro" title="Cambiar a tema oscuro" aria-pressed="false">
+            <span class="theme-toggle-icon" id="themeToggleIcon" aria-hidden="true">🌙</span>
+            <span class="header-menu-item-label">Tema</span>
+          </button>
+        </div>
+      </div>
 
       <!-- Botón de alternancia en móviles -->
       <div class="mobile-view-toggle" id="mobileViewToggle">
@@ -111,44 +132,39 @@
           <button id="clearSearchBtn" class="clear-btn" style="display: none;" title="Limpiar búsqueda">&times;</button>
         </div>
 
-        <!-- Filtros rápidos por Categoría -->
-        <div class="categories-scroll" id="categoryChips">
-          <button class="chip active" data-category="all">Todos</button>
-          <button class="chip" data-category="Arte">🎨 Arte</button>
-          <button class="chip" data-category="Historia">📜 Historia</button>
-          <button class="chip" data-category="Arqueología">⛏️ Arqueología</button>
-          <button class="chip" data-category="Antropología">🏺 Antropología</button>
-          <button class="chip" data-category="Ciencia">🔬 Ciencia</button>
-          <button class="chip" data-category="Especializado">🏛️ Especializado</button>
-          <button class="chip" data-category="Casas Museo">🏡 Casas Museo</button>
-          <button class="chip" data-category="Cultura Popular">🎭 Cultura Popular</button>
-          <button class="chip" data-category="Infantil">🎈 Infantil</button>
-        </div>
-
-        <!-- Barra de resultados, entrada libre y ordenamiento -->
+        <!-- Filtros y contador de resultados -->
         <div class="list-controls">
-          <button class="chip free-entry-toggle" id="btnOnlyFree" type="button" aria-pressed="false" aria-expanded="false" aria-controls="freeEntryDayOptions">
-            Entrada libre
+          <button class="chip category-toggle" id="btnCategoryToggle" type="button" aria-expanded="false" aria-controls="categoryChips">
+            🏷️ Por categoría
           </button>
-          <div class="sort-wrapper">
-            <label for="sortSelect">Ordenar:</label>
-            <select id="sortSelect" class="sort-select">
-              <option value="name-asc">Nombre (A - Z)</option>
-              <option value="name-desc">Nombre (Z - A)</option>
-              <option value="distance" disabled id="sortDistanceOption">Proximidad (cercanía)</option>
-            </select>
+          <button class="chip free-entry-toggle" id="btnOnlyFree" type="button" aria-pressed="false" aria-expanded="false" aria-controls="freeEntryDayOptions">
+            💰 Entrada libre
+          </button>
+          <div class="filter-options" id="filterOptions" hidden>
+            <div class="categories-scroll" id="categoryChips" role="group" aria-label="Filtrar por categoría" hidden>
+              <button class="chip active" type="button" data-category="all" aria-pressed="true">Todas</button>
+              <button class="chip" type="button" data-category="Arte" aria-pressed="false">🎨 Arte</button>
+              <button class="chip" type="button" data-category="Historia" aria-pressed="false">📜 Historia</button>
+              <button class="chip" type="button" data-category="Arqueología" aria-pressed="false">⛏️ Arqueología</button>
+              <button class="chip" type="button" data-category="Antropología" aria-pressed="false">🏺 Antropología</button>
+              <button class="chip" type="button" data-category="Ciencia" aria-pressed="false">🔬 Ciencia</button>
+              <button class="chip" type="button" data-category="Especializado" aria-pressed="false">🏛️ Especializado</button>
+              <button class="chip" type="button" data-category="Casas Museo" aria-pressed="false">🏡 Casas Museo</button>
+              <button class="chip" type="button" data-category="Cultura Popular" aria-pressed="false">🎭 Cultura Popular</button>
+              <button class="chip" type="button" data-category="Infantil" aria-pressed="false">🎈 Infantil</button>
+            </div>
+            <div class="free-entry-days" id="freeEntryDayOptions" role="group" aria-label="Filtrar entrada libre por día" hidden>
+              <button class="chip active" type="button" data-free-day="all" aria-pressed="true">Todos los días</button>
+              <button class="chip" type="button" data-free-day="domingo" aria-pressed="false">Domingo</button>
+              <button class="chip" type="button" data-free-day="lunes" aria-pressed="false">Lunes</button>
+              <button class="chip" type="button" data-free-day="martes" aria-pressed="false">Martes</button>
+              <button class="chip" type="button" data-free-day="miercoles" aria-pressed="false">Miércoles</button>
+              <button class="chip" type="button" data-free-day="jueves" aria-pressed="false">Jueves</button>
+              <button class="chip" type="button" data-free-day="viernes" aria-pressed="false">Viernes</button>
+              <button class="chip" type="button" data-free-day="sabado" aria-pressed="false">Sábado</button>
+            </div>
           </div>
           <span class="results-feedback" id="resultsFeedback">Cargando museos...</span>
-        </div>
-        <div class="free-entry-days" id="freeEntryDayOptions" role="group" aria-label="Filtrar entrada libre por día" hidden>
-          <button class="chip active" type="button" data-free-day="all" aria-pressed="true">Todos los días</button>
-          <button class="chip" type="button" data-free-day="domingo" aria-pressed="false">Domingo</button>
-          <button class="chip" type="button" data-free-day="lunes" aria-pressed="false">Lunes</button>
-          <button class="chip" type="button" data-free-day="martes" aria-pressed="false">Martes</button>
-          <button class="chip" type="button" data-free-day="miercoles" aria-pressed="false">Miércoles</button>
-          <button class="chip" type="button" data-free-day="jueves" aria-pressed="false">Jueves</button>
-          <button class="chip" type="button" data-free-day="viernes" aria-pressed="false">Viernes</button>
-          <button class="chip" type="button" data-free-day="sabado" aria-pressed="false">Sábado</button>
         </div>
 
       </div>
@@ -192,13 +208,13 @@
 
       <!-- Leyenda rápida del mapa -->
       <div class="map-legend">
-        <div class="legend-item"><span class="legend-dot dot-arte"></span> Arte</div>
-        <div class="legend-item"><span class="legend-dot dot-historia"></span> Historia</div>
-        <div class="legend-item"><span class="legend-dot dot-antropologia"></span> Antropología</div>
-        <div class="legend-item"><span class="legend-dot dot-ciencia"></span> Ciencia</div>
-        <div class="legend-item"><span class="legend-dot dot-casas"></span> Casas Museo</div>
-        <div class="legend-item"><span class="legend-dot dot-cultura"></span> Popular</div>
-        <div class="legend-item"><span class="legend-dot dot-infantil"></span> Infantil</div>
+        <div class="legend-item"><span class="legend-dot dot-arte"></span>🎨 Arte</div>
+        <div class="legend-item"><span class="legend-dot dot-historia"></span>📜 Historia</div>
+        <div class="legend-item"><span class="legend-dot dot-antropologia"></span>🏺 Antropología</div>
+        <div class="legend-item"><span class="legend-dot dot-ciencia"></span>🔬 Ciencia</div>
+        <div class="legend-item"><span class="legend-dot dot-casas"></span>🏠 Casas Museo</div>
+        <div class="legend-item"><span class="legend-dot dot-cultura"></span>🎭 Popular</div>
+        <div class="legend-item"><span class="legend-dot dot-infantil"></span>🎈 Infantil</div>
       </div>
     </section>
   </main>
@@ -229,7 +245,7 @@
       <div class="modal-header-image" id="modalImageContainer">
         <img id="modalImage" src="" alt="Foto del museo" loading="lazy">
         <div class="modal-badge-wrapper">
-          <span class="category-badge" id="modalCategory">Arte</span>
+          <span class="badge badge-category modal-category-badge" id="modalCategory">🎨 Arte</span>
           <span class="free-badge" id="modalFreeBadge">Entrada Libre</span>
         </div>
         <a class="modal-image-credit" id="modalImageCredit" href="#" target="_blank" rel="noopener noreferrer" style="display: none;">

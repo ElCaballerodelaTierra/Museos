@@ -402,5 +402,172 @@ const NOCHE_MUSEOS_DATA = [
       admission: 'Entrada libre.',
       format: 'Presencial.'
     }
+  },
+  {
+    sicId: 975,
+    event: {
+      title: 'Debla: Guitarra y Baile Flamenco',
+      image: 'data/noche-museos/museo-legislativo.jpg',
+      activities: 'Baile con Gabriela Uribe «La Mora» y Oscar Cruz «El Moro»; guitarra con Francisco Villegas y Jesús Magro.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 17:00.',
+      admission: 'Entrada libre.',
+      capacity: 'Aforo máximo de 80 personas.',
+      format: 'Presencial y transmisión en vivo.'
+    }
+  },
+  {
+    museumId: 'palacio-mineria',
+    event: {
+      title: 'Ellas escribieron la canción',
+      image: 'data/noche-museos/palacio-mineria.jpg',
+      activities: 'Concierto con ALTUM ensamble México, dedicado a compositoras iberoamericanas.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 19:00.',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo máximo de 200 personas.',
+      registration: 'Sin registro previo.',
+      format: 'Presencial. Palacio de Minería, Tacuba 7, Centro Histórico.'
+    }
+  },
+  {
+    sicId: 811,
+    event: {
+      title: 'Tolsá y su tiempo',
+      image: 'data/noche-museos/palacio-mineria.jpg',
+      activities: 'Exposición temporal.',
+      schedule: 'Miércoles 25 de noviembre de 2026; horario extendido hasta las 21:00.',
+      admission: 'Entrada libre.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    id: 'noche-casa-cultura-postal',
+    name: 'Museo Casa de la Cultura Postal',
+    category: 'Cultura Popular',
+    alcaldia: 'Cuauhtémoc',
+    address: 'Valentín Gómez Farías 52, colonia San Rafael, alcaldía Cuauhtémoc, Ciudad de México.',
+    coordinates: [19.4370876, -99.1583423],
+    event: {
+      title: 'Marco Polo: rock, ska y cumbia',
+      image: 'data/noche-museos/casa-cultura-postal.jpg',
+      activities: 'Recorrido libre por el museo y concierto de Marco Polo Banda.',
+      schedule: 'Miércoles 25 de noviembre de 2026: recorrido 17:00; concierto 18:00.',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo máximo de 100 personas.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    museumId: 'museo-basilica-guadalupe',
+    event: {
+      title: 'Recital de piano',
+      image: 'data/noche-museos/museo-basilica-guadalupe.jpg',
+      activities: 'Recital de Santiago Said Domínguez Ortega. El cartel anuncia obras de Mozart, Bach, Debussy, Schubert, Liszt, Rajmáninov y Chopin.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 19:00.',
+      format: 'Concierto virtual, transmisión por Facebook y YouTube.'
+    }
+  },
+  {
+    museumId: 'estudio-diego-frida',
+    event: {
+      title: 'La luz que habita',
+      image: 'data/noche-museos/casa-estudio-diego-rivera-frida-kahlo.jpg',
+      activities: 'Conversatorio: Pablo Álvarez conversa con María Fernanda Almela.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:30.',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo de 60 personas.',
+      registration: 'Sin registro previo.',
+      format: 'Presencial; público en general.',
+      contact: 'medr.difusion@inba.gob.mx.'
+    }
+  },
+  {
+    museumId: 'ciudad-mexico',
+    event: {
+      title: 'El niño ajeno: ¿De dónde nace la mirada de un artista?',
+      image: 'data/noche-museos/museo-ciudad-mexico.jpg',
+      activities: 'Inauguración de la exposición de Juan Manuel Guillén Guillman.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 17:00.',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo limitado a 150 personas.',
+      format: 'Presencial. José María Pino Suárez 30, Centro Histórico.'
+    }
+  },
+  {
+    id: 'noche-faro-azcapotzalco',
+    name: 'FARO Azcapotzalco Xochicalli',
+    category: 'Cultura Popular',
+    alcaldia: 'Azcapotzalco',
+    address: 'Avenida Cultura Norte s/n, frente al Metrobús El Rosario, Azcapotzalco, Ciudad de México.',
+    coordinates: [19.5072804, -99.2001501],
+    event: {
+      title: '25N: actividades por el Día Internacional de la Eliminación de la Violencia contra las Mujeres',
+      image: 'data/noche-museos/faro-azcapotzalco.jpg',
+      activities: 'Mercadita gráfica comunitaria; muestra gráfica y de resistencia; Princesas del Ghetto; conversatoria; galería plástica; coro para mujeres; intervención de grafiti en vivo; danzón de mujeres; Canto Xochicalli de Mujeres; Piel de resistencia (burlesque); y obra de teatro «Del Odio al Amor».',
+      schedule: 'Miércoles 25 de noviembre de 2026, desde las 17:00.',
+      admission: 'Entrada libre.',
+      capacity: 'Aforo máximo de 200 personas.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    id: 'noche-faro-tecomitl',
+    name: 'FARO Tecómitl',
+    category: 'Cultura Popular',
+    alcaldia: 'Milpa Alta',
+    address: 'Avenida Dr. Gastón Melo 40, planta alta, Tenantitla, San Antonio Tecómitl, Milpa Alta, Ciudad de México.',
+    coordinates: [19.2217199, -98.9953331],
+    event: {
+      title: 'Raíces tejidas',
+      image: 'data/noche-museos/faro-tecomitl.jpg',
+      activities: 'Iniciativa cultural para rescatar, salvaguardar y difundir el patrimonio textil comunitario; promueve el reconocimiento de técnicas, herramientas y saberes heredados, así como el intercambio intergeneracional.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 17:00 a 18:00.',
+      admission: 'Entrada libre.',
+      capacity: 'Aforo de 40 personas.',
+      registration: 'Sin registro.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    museumId: 'historia-natural',
+    event: {
+      title: '¡La magia regresa al museo!',
+      image: 'data/noche-museos/museo-historia-natural.jpg',
+      activities: 'Noche de hechizos y criaturas fantásticas. Actividades lúdicas: selección de casas, magia tenebrosa, creación de pociones, Patronus y prueba del hechicero. Talleres: mapa mágico, tu nombre en pársel y búsqueda de criaturas mágicas. Charla: «Animagos». Colabora Laurie Ann Snape. Actividades virtuales a las 18:00: «Las constelaciones» y «Bisonte americano», transmitidas por redes sociales.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:00 a 20:30. Cierre de taquilla a las 20:00. Transmisiones virtuales a las 18:00.',
+      admission: 'El cartel indica $39 MXN público general, $19 MXN menores de 12 años, maestros y estudiantes, y $16 MXN visitas guiadas con reservación previa. También muestra una leyenda de acceso libre, sin aclarar a qué aplica; confirma las condiciones con el museo.',
+      capacity: 'Aforo máximo de 300 personas.',
+      format: 'Presencial y actividades virtuales.'
+    }
+  },
+  {
+    sicId: 796,
+    event: {
+      title: 'Homenaje a René del Valle',
+      image: 'data/noche-museos/museo-caricatura.jpg',
+      activities: 'Exposición de obras originales en homenaje a René del Valle, dibujante del famoso Kalimán.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 19:00.',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo máximo de 150 personas.',
+      registration: 'Sin registro previo.',
+      format: 'Presencial. Donceles 99, Centro Histórico.'
+    }
+  },
+  {
+    id: 'noche-centro-cultura-digital',
+    name: 'Centro de Cultura Digital (CCD)',
+    category: 'Arte',
+    alcaldia: 'Cuauhtémoc',
+    address: 'Paseo de la Reforma, esquina Lieja, colonia Juárez, Ciudad de México.',
+    coordinates: [19.4230586, -99.1759093],
+    event: {
+      title: 'Sesiones audiovisuales: Desobediencia',
+      image: 'data/noche-museos/centro-cultura-digital.jpg',
+      activities: 'En el marco de la exposición colectiva «Deslenguadas: escuchar desde la desobediencia». 18:00–19:00, «El mensaje no existe», con Edith Heney y Emiliana Martínez. 19:00–20:00, «Desobediencia Sonora», con Erika Santos, TRS y Mónica Garrido.',
+      schedule: 'Miércoles 25 de noviembre de 2026: «El mensaje no existe» 18:00–19:00; «Desobediencia Sonora» 19:00–20:00.',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo limitado a 120 personas.',
+      registration: 'Sin registro previo.',
+      format: 'Presencial.'
+    }
   }
 ];
