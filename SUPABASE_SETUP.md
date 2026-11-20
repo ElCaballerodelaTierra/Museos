@@ -1,8 +1,8 @@
-# Configurar la sincronización de favoritos y visitas
+# Configurar la sincronización de favoritos, visitas y museos por visitar
 
 La aplicación puede seguir funcionando sin cuenta y guardar las marcas en el navegador. Para sincronizarlas entre dispositivos, configura un proyecto de Supabase:
 
-1. Crea un proyecto y ejecuta [`supabase/schema.sql`](./supabase/schema.sql) en el SQL Editor. La tabla y sus políticas RLS restringen cada marca al usuario autenticado.
+1. Crea un proyecto y ejecuta [`supabase/schema.sql`](./supabase/schema.sql) en el SQL Editor. La tabla y sus políticas RLS restringen cada marca al usuario autenticado. Si ya habías configurado la sincronización, vuelve a ejecutar el archivo para habilitar también la marca «Por visitar».
 2. Configura el acceso por correo y las URL de retorno:
 
    - En el panel del proyecto abre **Authentication → Sign In / Providers → Email** y comprueba que Email esté habilitado. La aplicación usa enlaces de acceso sin contraseña.
@@ -35,4 +35,4 @@ La aplicación puede seguir funcionando sin cuenta y guardar las marcas en el na
 
 La clave `anon`/publishable está diseñada para estar disponible en el cliente y no sustituye las políticas RLS. **Nunca** pongas la clave `service_role` en `supabase-config.js` ni en ningún archivo enviado al navegador.
 
-Al iniciar sesión por primera vez, las marcas locales se combinan con las de la cuenta. Mientras haya sesión, cada cambio se guarda en ambos sitios; al cerrar sesión se limpia la copia local del dispositivo sin borrar las marcas de la cuenta. Los cambios hechos en otro dispositivo se cargan al iniciar sesión, recargar la página o volver a la pestaña; no se envían en tiempo real a una página que permanece abierta.
+Al iniciar sesión por primera vez, las marcas locales de Favoritos, Visitados y Por visitar se combinan con las de la cuenta. Mientras haya sesión, cada cambio se guarda en ambos sitios; al cerrar sesión se limpia la copia local del dispositivo sin borrar las marcas de la cuenta. Los cambios hechos en otro dispositivo se cargan al iniciar sesión, recargar la página o volver a la pestaña; no se envían en tiempo real a una página que permanece abierta.

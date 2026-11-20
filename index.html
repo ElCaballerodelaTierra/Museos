@@ -59,6 +59,13 @@
         <span id="visitedLabel">Visitados</span><span id="visitedCountWrapper" hidden> (<span id="visitedCount">0</span>)</span>
       </button>
 
+      <button class="btn btn-outline" id="btnPlanned" type="button" title="Filtrar museos por visitar" aria-label="Filtrar museos por visitar" aria-pressed="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4V4.75Z"></path>
+        </svg>
+        <span id="plannedLabel">Por visitar<span id="plannedCountWrapper" hidden> (<span id="plannedCount">0</span>)</span></span>
+      </button>
+
       <button class="btn btn-outline account-button" id="btnAccount" type="button" aria-label="Cuenta y sincronización" title="Cuenta y sincronización">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="8" r="4"></circle>
@@ -198,8 +205,8 @@
 
   <dialog class="account-dialog" id="accountDialog" aria-labelledby="accountDialogTitle" aria-describedby="accountDialogDescription">
     <button class="modal-close-btn" id="btnCloseAccount" type="button" aria-label="Cerrar ventana">&times;</button>
-    <h2 id="accountDialogTitle">Sincronizar favoritos y visitas</h2>
-    <p id="accountDialogDescription">Inicia sesión con tu correo para guardar tus museos en tu cuenta y verlos en otros dispositivos.</p>
+    <h2 id="accountDialogTitle">Sincronizar tus museos guardados</h2>
+    <p id="accountDialogDescription">Inicia sesión con tu correo para guardar tus favoritos, visitas y museos por visitar en tu cuenta y verlos en otros dispositivos.</p>
     <p class="account-status" id="accountStatus" role="status" aria-live="polite"></p>
 
     <form class="account-signin-form" id="accountSignInForm">

@@ -737,6 +737,43 @@ html, body {
   color: var(--success-text);
 }
 
+.card-marker-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.planned-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  background-color: var(--surface-control);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.planned-card-btn:hover,
+.planned-card-btn.planned {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.planned-card-btn.planned {
+  background-color: var(--surface-selected);
+}
+
+.planned-card-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
 .badge {
   font-size: 0.68rem;
   font-weight: 700;
@@ -1580,6 +1617,7 @@ html, body {
   #btnNearMe,
   #btnFavorites,
   #btnVisited,
+  #btnPlanned,
   #btnAccount,
   .theme-toggle {
     width: 34px;
@@ -1591,7 +1629,8 @@ html, body {
 
   #btnNearMe span,
   #favLabel,
-  #visitedLabel {
+  #visitedLabel,
+  #plannedLabel {
     display: none;
   }
 
@@ -1612,12 +1651,38 @@ html, body {
     display: none;
   }
 
+  .app-header {
+    gap: 0.15rem;
+    padding: 0 0.45rem;
+  }
+
+  .header-actions {
+    gap: 0.1rem;
+  }
+
+  #themeToggle {
+    display: none;
+  }
+
+  #btnVisited,
+  #btnPlanned,
+  #btnAccount {
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+  }
+
+  .mobile-view-toggle {
+    padding: 1px;
+  }
+
   .app-title {
     max-width: 70px;
   }
 
   .toggle-btn {
-    padding: 0.3rem 0.35rem;
+    padding: 0.2rem 0.25rem;
+    font-size: 0.65rem;
   }
 }
 

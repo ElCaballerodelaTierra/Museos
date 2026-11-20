@@ -1,10 +1,16 @@
 create table if not exists public.user_museum_markers (
   user_id uuid not null references auth.users (id) on delete cascade,
   museum_id text not null,
-  marker_type text not null check (marker_type in ('favorite', 'visited')),
+  marker_type text not null,
   created_at timestamptz not null default now(),
   primary key (user_id, museum_id, marker_type)
 );
+
+alter table public.user_museum_markers
+  drop constraint if exists user_museum_markers_marker_type_check;
+alter table public.user_museum_markers
+  add constraint user_museum_markers_marker_type_check
+  check (marker_type in ('favorite', 'visited', 'planned'));
 
 alter table public.user_museum_markers enable row level security;
 

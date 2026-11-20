@@ -15,10 +15,12 @@ const AppState = {
   sortOrder: 'name-asc',
   showOnlyFavorites: false,
   showOnlyVisited: false,
+  showOnlyPlanned: false,
   showOnlyNocheMuseos: false,
   userCoords: null,
   favorites: new Set(),
   visitedMuseums: new Set(),
+  plannedMuseums: new Set(),
   nocheMuseosOnly: [],
   markersMap: new Map(), // id -> L.Marker
   map: null,
@@ -176,6 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   loadFavoritesFromStorage();
   loadVisitedMuseumsFromStorage();
+  loadPlannedMuseumsFromStorage();
   initMap();
   initData();
   initEventHandlers();
@@ -201,6 +204,7 @@ function initDOMReferences() {
   DOM.btnNearMe = document.getElementById('btnNearMe');
   DOM.btnFavorites = document.getElementById('btnFavorites');
   DOM.btnVisited = document.getElementById('btnVisited');
+  DOM.btnPlanned = document.getElementById('btnPlanned');
   DOM.btnNocheMuseos = document.getElementById('btnNocheMuseos');
   DOM.themeToggle = document.getElementById('themeToggle');
   DOM.themeToggleIcon = document.getElementById('themeToggleIcon');
@@ -209,6 +213,8 @@ function initDOMReferences() {
   DOM.favLabel = document.getElementById('favLabel');
   DOM.visitedCount = document.getElementById('visitedCount');
   DOM.visitedCountWrapper = document.getElementById('visitedCountWrapper');
+  DOM.plannedCount = document.getElementById('plannedCount');
+  DOM.plannedCountWrapper = document.getElementById('plannedCountWrapper');
   DOM.btnAccount = document.getElementById('btnAccount');
   DOM.accountButtonLabel = document.getElementById('accountButtonLabel');
   DOM.accountDialog = document.getElementById('accountDialog');
@@ -307,9 +313,38 @@ function saveVisitedMuseumsToStorage() {
   updateVisitedBadge();
 }
 
+function loadPlannedMuseumsFromStorage() {
+  try {
+    const saved = localStorage.getItem('museos_cdmx_planned');
+    if (saved) {
+      const ids = JSON.parse(saved);
+      if (Array.isArray(ids)) {
+        AppState.plannedMuseums = new Set(ids);
+      }
+    }
+  } catch (error) {
+    console.warn('No se pudieron cargar los museos por visitar:', error);
+  }
+  updatePlannedBadge();
+}
+
+function savePlannedMuseumsToStorage() {
+  try {
+    localStorage.setItem('museos_cdmx_planned', JSON.stringify([...AppState.plannedMuseums]));
+  } catch (error) {
+    console.warn('No se pudieron guardar los museos por visitar:', error);
+  }
+  updatePlannedBadge();
+}
+
 function updateVisitedFilterButton() {
   DOM.btnVisited.classList.toggle('active', AppState.showOnlyVisited);
   DOM.btnVisited.setAttribute('aria-pressed', String(AppState.showOnlyVisited));
+}
+
+function updatePlannedFilterButton() {
+  DOM.btnPlanned.classList.toggle('active', AppState.showOnlyPlanned);
+  DOM.btnPlanned.setAttribute('aria-pressed', String(AppState.showOnlyPlanned));
 }
 
 function updateVisitedBadge() {
@@ -319,6 +354,16 @@ function updateVisitedBadge() {
   DOM.btnVisited.setAttribute(
     'aria-label',
     count > 0 ? `Filtrar museos visitados (${count})` : 'Filtrar museos visitados'
+  );
+}
+
+function updatePlannedBadge() {
+  const count = AppState.plannedMuseums.size;
+  DOM.plannedCount.textContent = count;
+  DOM.plannedCountWrapper.hidden = count === 0;
+  DOM.btnPlanned.setAttribute(
+    'aria-label',
+    count > 0 ? `Filtrar museos por visitar (${count})` : 'Filtrar museos por visitar'
   );
 }
 
@@ -509,17 +554,20 @@ async function handleAccountSession(session) {
   AccountSync.user = nextUser;
   AccountSync.ready = false;
   updateAccountControls();
-  setAccountStatus('Sincronizando tus favoritos y visitas...', 'info');
+  setAccountStatus('Sincronizando tus museos guardados...', 'info');
   await syncAccountMarkers(getCachedAccountUserId() !== nextUser.id);
 }
 
 function clearAccountCache() {
   AppState.favorites.clear();
   AppState.visitedMuseums.clear();
+  AppState.plannedMuseums.clear();
   AppState.showOnlyFavorites = false;
   AppState.showOnlyVisited = false;
+  AppState.showOnlyPlanned = false;
   DOM.btnFavorites.classList.remove('active');
   updateVisitedFilterButton();
+  updatePlannedFilterButton();
   try {
     localStorage.removeItem(ACCOUNT_CACHE_USER_KEY);
   } catch (error) {
@@ -527,6 +575,7 @@ function clearAccountCache() {
   }
   saveFavoritesToStorage();
   saveVisitedMuseumsToStorage();
+  savePlannedMuseumsToStorage();
   if (AppState.selectedId) updateVisitedButton(AppState.selectedId);
   applyFiltersAndRender();
 }
@@ -551,6 +600,11 @@ function localAccountMarkerRows(userId) {
       user_id: userId,
       museum_id: String(museumId),
       marker_type: 'visited'
+    })),
+    ...Array.from(AppState.plannedMuseums, museumId => ({
+      user_id: userId,
+      museum_id: String(museumId),
+      marker_type: 'planned'
     }))
   ];
 }
@@ -562,7 +616,7 @@ async function syncAccountMarkers(mergeLocal) {
   const userId = user.id;
   AccountSync.syncing = true;
   updateAccountControls();
-  setAccountStatus('Sincronizando tus favoritos y visitas...', 'info');
+  setAccountStatus('Sincronizando tus museos guardados...', 'info');
 
   try {
     const { data, error } = await AccountSync.client
@@ -600,6 +654,9 @@ async function syncAccountMarkers(mergeLocal) {
     AppState.visitedMuseums = new Set(
       rows.filter(row => row.marker_type === 'visited').map(row => row.museum_id)
     );
+    AppState.plannedMuseums = new Set(
+      rows.filter(row => row.marker_type === 'planned').map(row => row.museum_id)
+    );
     AccountSync.ready = true;
     try {
       localStorage.setItem(ACCOUNT_CACHE_USER_KEY, userId);
@@ -609,16 +666,17 @@ async function syncAccountMarkers(mergeLocal) {
     }
     saveFavoritesToStorage();
     saveVisitedMuseumsToStorage();
+    savePlannedMuseumsToStorage();
     applyFiltersAndRender();
     if (DOM.accountStatus.dataset.state !== 'error') {
       setAccountStatus(`Sincronizado con la cuenta ${user.email || ''}.`, 'success');
     }
     return true;
   } catch (error) {
-    console.error('No se pudieron sincronizar favoritos y visitas:', error);
+    console.error('No se pudieron sincronizar las marcas:', error);
     AccountSync.ready = false;
     setAccountStatus('No se pudieron sincronizar las marcas. Revisa tu conexión e inténtalo de nuevo.', 'error');
-    showToast('No se pudieron sincronizar tus favoritos y visitas.');
+    showToast('No se pudieron sincronizar tus museos guardados.');
     return false;
   } finally {
     AccountSync.syncing = false;
@@ -1070,6 +1128,15 @@ function initEventHandlers() {
     applyFiltersAndRender();
   });
 
+  DOM.btnPlanned.addEventListener('click', () => {
+    AppState.showOnlyPlanned = !AppState.showOnlyPlanned;
+    updatePlannedFilterButton();
+    showToast(AppState.showOnlyPlanned
+      ? 'Mostrando solo los museos por visitar'
+      : 'Mostrando todos los museos');
+    applyFiltersAndRender();
+  });
+
   DOM.btnNocheMuseos.addEventListener('click', () => {
     AppState.showOnlyNocheMuseos = !AppState.showOnlyNocheMuseos;
     updateNocheMuseosButton();
@@ -1212,6 +1279,10 @@ function applyFiltersAndRender() {
     }
 
     if (AppState.showOnlyVisited && !AppState.visitedMuseums.has(museo.id)) {
+      return false;
+    }
+
+    if (AppState.showOnlyPlanned && !AppState.plannedMuseums.has(museo.id)) {
       return false;
     }
 
@@ -1376,6 +1447,7 @@ function renderMuseumsList(museos) {
     const isSelected = museo.id === AppState.selectedId;
     const isFavorited = AppState.favorites.has(museo.id);
     const isVisited = AppState.visitedMuseums.has(museo.id);
+    const isPlanned = AppState.plannedMuseums.has(museo.id);
     const meta = CATEGORY_META[museo.categoria] || { color: '#64748b' };
     const eventPoster = AppState.showOnlyNocheMuseos && museo.nocheMuseos && museo.nocheMuseos.image;
     const image = escapeHtml(eventPoster || museo.imagen);
@@ -1409,6 +1481,19 @@ function renderMuseumsList(museos) {
       >
         <span data-visited-icon aria-hidden="true">${isVisited ? '✓' : '○'}</span>
         <span data-visited-label>${isVisited ? 'Visitado' : 'Marcar visita'}</span>
+      </button>`;
+    const plannedButton = museo.isNocheMuseosOnly ? '' : `
+      <button
+        type="button"
+        class="planned-card-btn ${isPlanned ? 'planned' : ''}"
+        data-action="planned"
+        aria-pressed="${isPlanned}"
+        aria-label="${isPlanned ? 'Quitar de Por visitar' : 'Añadir a Por visitar'}"
+        title="${isPlanned ? 'Quitar de Por visitar' : 'Añadir a Por visitar'}"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="${isPlanned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4V4.75Z"></path>
+        </svg>
       </button>`;
     const locateButton = hasValidCoordinates(museo) ? `
       <button class="action-link" data-action="locate">
@@ -1447,7 +1532,10 @@ function renderMuseumsList(museos) {
               ${museo.esGratis ? '<span class="badge badge-free">Gratis</span>' : ''}
               ${distanceBadge}
             </div>
-            ${visitedButton}
+            <div class="card-marker-actions">
+              ${visitedButton}
+              ${plannedButton}
+            </div>
           </div>
           <h3 class="card-title" title="${name}">${name}</h3>
           <p class="card-alcaldia">📍 ${alcaldia} · ${address}</p>
@@ -1478,6 +1566,12 @@ function renderMuseumsList(museos) {
       if (e.target.closest('[data-action="visited"]')) {
         e.stopPropagation();
         void toggleVisitedMuseum(museo.id);
+        return;
+      }
+
+      if (e.target.closest('[data-action="planned"]')) {
+        e.stopPropagation();
+        void togglePlannedMuseum(museo.id);
         return;
       }
 
@@ -1870,6 +1964,42 @@ async function toggleVisitedMuseum(id) {
   }
 }
 
+function updatePlannedButton(id) {
+  const isPlanned = AppState.plannedMuseums.has(id);
+  const card = document.getElementById(`card-${id}`);
+  const cardButton = card && card.querySelector('[data-action="planned"]');
+  if (!cardButton) return;
+
+  cardButton.classList.toggle('planned', isPlanned);
+  cardButton.setAttribute('aria-pressed', String(isPlanned));
+  const label = isPlanned ? 'Quitar de Por visitar' : 'Añadir a Por visitar';
+  cardButton.setAttribute('aria-label', label);
+  cardButton.title = label;
+  cardButton.querySelector('svg').setAttribute('fill', isPlanned ? 'currentColor' : 'none');
+}
+
+async function togglePlannedMuseum(id) {
+  const museo = findMuseumById(id);
+  if (!museo || museo.isNocheMuseosOnly) return;
+
+  const isPlanned = AppState.plannedMuseums.has(id);
+  if (!await persistAccountMarker(id, 'planned', !isPlanned)) return;
+
+  if (isPlanned) {
+    AppState.plannedMuseums.delete(id);
+    showToast(`Eliminado de tu lista de museos por visitar: ${museo.nombre}`);
+  } else {
+    AppState.plannedMuseums.add(id);
+    showToast(`Añadido a tu lista de museos por visitar: ${museo.nombre}`);
+  }
+
+  savePlannedMuseumsToStorage();
+  updatePlannedButton(id);
+  if (AppState.showOnlyPlanned) {
+    applyFiltersAndRender();
+  }
+}
+
 /**
  * Alterna el estado de favorito de un museo
  */
@@ -1921,6 +2051,7 @@ function resetAllFilters() {
   AppState.searchQuery = '';
   AppState.showOnlyFavorites = false;
   AppState.showOnlyVisited = false;
+  AppState.showOnlyPlanned = false;
   AppState.showOnlyNocheMuseos = false;
   AppState.sortOrder = 'name-asc';
 
@@ -1930,6 +2061,7 @@ function resetAllFilters() {
   DOM.sortSelect.value = 'name-asc';
   DOM.btnFavorites.classList.remove('active');
   updateVisitedFilterButton();
+  updatePlannedFilterButton();
   updateNocheMuseosButton();
 
   DOM.categoryChips.querySelectorAll('.chip').forEach(c => {
