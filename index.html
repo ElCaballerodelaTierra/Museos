@@ -48,7 +48,7 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
         </svg>
-        <span id="favLabel">Favoritos (<span id="favCount">0</span>)</span>
+        <span id="favLabel">Favoritos<span id="favCountWrapper" hidden> (<span id="favCount">0</span>)</span></span>
       </button>
 
       <button class="btn btn-outline" id="btnVisited" type="button" title="Filtrar museos visitados" aria-label="Filtrar museos visitados" aria-pressed="false">
@@ -56,7 +56,15 @@
           <circle cx="12" cy="12" r="10"></circle>
           <path d="m9 12 2 2 4-4"></path>
         </svg>
-        <span id="visitedLabel">Visitados</span>
+        <span id="visitedLabel">Visitados</span><span id="visitedCountWrapper" hidden> (<span id="visitedCount">0</span>)</span>
+      </button>
+
+      <button class="btn btn-outline account-button" id="btnAccount" type="button" aria-label="Cuenta y sincronización" title="Cuenta y sincronización">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M5 21a7 7 0 0 1 14 0"></path>
+        </svg>
+        <span id="accountButtonLabel">Cuenta</span>
       </button>
 
       <button class="btn btn-outline theme-toggle" id="themeToggle" type="button" aria-label="Cambiar a tema oscuro" title="Cambiar a tema oscuro" aria-pressed="false">
@@ -188,6 +196,24 @@
     </section>
   </main>
 
+  <dialog class="account-dialog" id="accountDialog" aria-labelledby="accountDialogTitle" aria-describedby="accountDialogDescription">
+    <button class="modal-close-btn" id="btnCloseAccount" type="button" aria-label="Cerrar ventana">&times;</button>
+    <h2 id="accountDialogTitle">Sincronizar favoritos y visitas</h2>
+    <p id="accountDialogDescription">Inicia sesión con tu correo para guardar tus museos en tu cuenta y verlos en otros dispositivos.</p>
+    <p class="account-status" id="accountStatus" role="status" aria-live="polite"></p>
+
+    <form class="account-signin-form" id="accountSignInForm">
+      <label for="accountEmail">Correo electrónico</label>
+      <input id="accountEmail" type="email" autocomplete="email" required>
+      <button class="btn btn-primary" id="btnAccountSignIn" type="submit">Enviar enlace de acceso</button>
+    </form>
+
+    <div class="account-actions">
+      <button class="btn btn-outline" id="btnRetryAccountSync" type="button" hidden>Reintentar sincronización</button>
+      <button class="btn btn-outline" id="btnAccountSignOut" type="button" hidden>Cerrar sesión</button>
+    </div>
+  </dialog>
+
   <!-- Modal de Detalle Completo del Museo -->
   <div class="modal-overlay" id="museumModal" style="display: none;">
     <div class="modal-card">
@@ -312,6 +338,10 @@
   <script src="data/museos-sic.js"></script>
   <script src="data/noche-museos.js"></script>
   
+  <!-- Configuración pública de Supabase y cliente de autenticación -->
+  <script src="supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <!-- Lógica de la aplicación -->
   <script src="app.js"></script>
 </body>

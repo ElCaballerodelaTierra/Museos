@@ -31,6 +31,18 @@ const AppState = {
   theme: 'light'
 };
 
+const AccountSync = {
+  client: null,
+  user: null,
+  configured: false,
+  ready: false,
+  syncing: false,
+  pendingMarkers: new Set()
+};
+
+const ACCOUNT_MARKERS_TABLE = 'user_museum_markers';
+const ACCOUNT_CACHE_USER_KEY = 'museos_cdmx_sync_user';
+
 // Mapeo de categorías con colores e iconos
 const CATEGORY_META = {
   'Arte': { color: '#8b5cf6', icon: '🎨', cssClass: 'dot-arte' },
@@ -168,6 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initData();
   initEventHandlers();
   applyFiltersAndRender();
+  void initAccountSync();
 });
 
 /**
@@ -192,7 +205,20 @@ function initDOMReferences() {
   DOM.themeToggle = document.getElementById('themeToggle');
   DOM.themeToggleIcon = document.getElementById('themeToggleIcon');
   DOM.favCount = document.getElementById('favCount');
+  DOM.favCountWrapper = document.getElementById('favCountWrapper');
   DOM.favLabel = document.getElementById('favLabel');
+  DOM.visitedCount = document.getElementById('visitedCount');
+  DOM.visitedCountWrapper = document.getElementById('visitedCountWrapper');
+  DOM.btnAccount = document.getElementById('btnAccount');
+  DOM.accountButtonLabel = document.getElementById('accountButtonLabel');
+  DOM.accountDialog = document.getElementById('accountDialog');
+  DOM.btnCloseAccount = document.getElementById('btnCloseAccount');
+  DOM.accountStatus = document.getElementById('accountStatus');
+  DOM.accountSignInForm = document.getElementById('accountSignInForm');
+  DOM.accountEmail = document.getElementById('accountEmail');
+  DOM.btnAccountSignIn = document.getElementById('btnAccountSignIn');
+  DOM.btnAccountSignOut = document.getElementById('btnAccountSignOut');
+  DOM.btnRetryAccountSync = document.getElementById('btnRetryAccountSync');
   DOM.btnResetMap = document.getElementById('btnResetMap');
   DOM.btnLayerToggle = document.getElementById('btnLayerToggle');
   DOM.layerDropdown = document.getElementById('layerDropdown');
@@ -269,6 +295,7 @@ function loadVisitedMuseumsFromStorage() {
   } catch (error) {
     console.warn('No se pudieron cargar los museos visitados:', error);
   }
+  updateVisitedBadge();
 }
 
 function saveVisitedMuseumsToStorage() {
@@ -277,11 +304,22 @@ function saveVisitedMuseumsToStorage() {
   } catch (error) {
     console.warn('No se pudieron guardar los museos visitados:', error);
   }
+  updateVisitedBadge();
 }
 
 function updateVisitedFilterButton() {
   DOM.btnVisited.classList.toggle('active', AppState.showOnlyVisited);
   DOM.btnVisited.setAttribute('aria-pressed', String(AppState.showOnlyVisited));
+}
+
+function updateVisitedBadge() {
+  const count = AppState.visitedMuseums.size;
+  DOM.visitedCount.textContent = count;
+  DOM.visitedCountWrapper.hidden = count === 0;
+  DOM.btnVisited.setAttribute(
+    'aria-label',
+    count > 0 ? `Filtrar museos visitados (${count})` : 'Filtrar museos visitados'
+  );
 }
 
 function updateNocheMuseosButton() {
@@ -315,6 +353,331 @@ function hasValidCoordinates(museo) {
 function updateFavoritesBadge() {
   const count = AppState.favorites.size;
   DOM.favCount.textContent = count;
+  DOM.favCountWrapper.hidden = count === 0;
+}
+
+function initAccountSync() {
+  DOM.btnAccount.addEventListener('click', () => DOM.accountDialog.showModal());
+  DOM.btnCloseAccount.addEventListener('click', () => DOM.accountDialog.close());
+  DOM.accountDialog.addEventListener('click', event => {
+    if (event.target === DOM.accountDialog) DOM.accountDialog.close();
+  });
+  DOM.accountSignInForm.addEventListener('submit', handleAccountSignIn);
+  DOM.btnAccountSignOut.addEventListener('click', handleAccountSignOut);
+  DOM.btnRetryAccountSync.addEventListener('click', () => {
+    if (AccountSync.user) {
+      void syncAccountMarkers(getCachedAccountUserId() !== AccountSync.user.id);
+    }
+  });
+
+  const config = window.MUSEOS_SUPABASE_CONFIG;
+  if (!config || !config.url || !config.anonKey) {
+    updateAccountControls();
+    setAccountStatus('La sincronización requiere configurar Supabase. Consulta SUPABASE_SETUP.md.', 'error');
+    return;
+  }
+
+  if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+    updateAccountControls();
+    setAccountStatus('No se pudo cargar el cliente de sincronización. Revisa tu conexión.', 'error');
+    return;
+  }
+
+  try {
+    AccountSync.client = window.supabase.createClient(config.url, config.anonKey);
+  } catch (error) {
+    console.error('No se pudo inicializar Supabase:', error);
+    updateAccountControls();
+    setAccountStatus('La configuración de Supabase no es válida.', 'error');
+    return;
+  }
+
+  AccountSync.configured = true;
+  updateAccountControls();
+  setAccountStatus('Inicia sesión con tu correo para sincronizar tus marcas.', 'info');
+
+  AccountSync.client.auth.onAuthStateChange((_event, session) => {
+    window.setTimeout(() => {
+      void handleAccountSession(session);
+    }, 0);
+  });
+
+  void AccountSync.client.auth.getSession().then(({ data, error }) => {
+    if (error) {
+      console.error('No se pudo recuperar la sesión de Supabase:', error);
+      setAccountStatus('No se pudo revisar tu sesión. Vuelve a abrir la cuenta para intentarlo de nuevo.', 'error');
+      return;
+    }
+
+    void handleAccountSession(data.session);
+  }).catch(error => {
+    console.error('No se pudo recuperar la sesión de Supabase:', error);
+    setAccountStatus('No se pudo revisar tu sesión. Vuelve a abrir la cuenta para intentarlo de nuevo.', 'error');
+  });
+
+  window.addEventListener('focus', refreshAccountMarkersOnFocus);
+}
+
+function updateAccountControls() {
+  const signedIn = Boolean(AccountSync.user);
+  DOM.accountButtonLabel.textContent = 'Cuenta';
+  DOM.btnAccount.classList.toggle('active', signedIn);
+  DOM.btnAccount.setAttribute('aria-label', signedIn ? 'Cuenta conectada' : 'Cuenta y sincronización');
+  DOM.btnAccount.title = signedIn
+    ? `Cuenta conectada: ${AccountSync.user.email || 'correo verificado'}`
+    : 'Cuenta y sincronización';
+  DOM.accountSignInForm.hidden = signedIn || !AccountSync.configured;
+  DOM.btnAccountSignOut.hidden = !signedIn;
+  DOM.btnRetryAccountSync.hidden = !signedIn || AccountSync.ready || AccountSync.syncing;
+}
+
+function setAccountStatus(message, state) {
+  DOM.accountStatus.textContent = message;
+  DOM.accountStatus.dataset.state = state;
+}
+
+async function handleAccountSignIn(event) {
+  event.preventDefault();
+  if (!AccountSync.client) return;
+
+  if (window.location.protocol !== 'https:' &&
+      !(window.location.protocol === 'http:' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))) {
+    setAccountStatus('Abre la aplicación desde localhost o un sitio HTTPS para iniciar sesión.', 'error');
+    return;
+  }
+
+  const email = DOM.accountEmail.value.trim();
+  const redirectUrl = new URL(window.location.href);
+  redirectUrl.search = '';
+  redirectUrl.hash = '';
+  DOM.btnAccountSignIn.disabled = true;
+
+  try {
+    const { error } = await AccountSync.client.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: redirectUrl.toString() }
+    });
+    if (error) throw error;
+
+    setAccountStatus('Te enviamos un enlace de acceso. Revisa tu correo para continuar.', 'success');
+  } catch (error) {
+    console.error('No se pudo enviar el enlace de acceso:', error);
+    setAccountStatus('No se pudo enviar el enlace. Revisa el correo e inténtalo de nuevo.', 'error');
+    showToast('No se pudo enviar el enlace de acceso.');
+  } finally {
+    DOM.btnAccountSignIn.disabled = false;
+  }
+}
+
+async function handleAccountSignOut() {
+  if (!AccountSync.client) return;
+
+  DOM.btnAccountSignOut.disabled = true;
+  try {
+    const { error } = await AccountSync.client.auth.signOut();
+    if (error) throw error;
+    await handleAccountSession(null);
+    DOM.accountDialog.close();
+  } catch (error) {
+    console.error('No se pudo cerrar la sesión de Supabase:', error);
+    setAccountStatus('No se pudo cerrar la sesión. Inténtalo de nuevo.', 'error');
+    showToast('No se pudo cerrar la sesión.');
+  } finally {
+    DOM.btnAccountSignOut.disabled = false;
+  }
+}
+
+async function handleAccountSession(session) {
+  const nextUser = session && session.user;
+  const currentUserId = AccountSync.user && AccountSync.user.id;
+
+  if (!nextUser) {
+    if (currentUserId) clearAccountCache();
+    AccountSync.user = null;
+    AccountSync.ready = false;
+    updateAccountControls();
+    if (AccountSync.configured) {
+      setAccountStatus('Inicia sesión con tu correo para sincronizar tus marcas.', 'info');
+    }
+    return;
+  }
+
+  if (currentUserId && currentUserId !== nextUser.id) clearAccountCache();
+  if (currentUserId === nextUser.id && (AccountSync.ready || AccountSync.syncing)) return;
+
+  AccountSync.user = nextUser;
+  AccountSync.ready = false;
+  updateAccountControls();
+  setAccountStatus('Sincronizando tus favoritos y visitas...', 'info');
+  await syncAccountMarkers(getCachedAccountUserId() !== nextUser.id);
+}
+
+function clearAccountCache() {
+  AppState.favorites.clear();
+  AppState.visitedMuseums.clear();
+  AppState.showOnlyFavorites = false;
+  AppState.showOnlyVisited = false;
+  DOM.btnFavorites.classList.remove('active');
+  updateVisitedFilterButton();
+  try {
+    localStorage.removeItem(ACCOUNT_CACHE_USER_KEY);
+  } catch (error) {
+    console.warn('No se pudo limpiar el identificador de cuenta local:', error);
+  }
+  saveFavoritesToStorage();
+  saveVisitedMuseumsToStorage();
+  if (AppState.selectedId) updateVisitedButton(AppState.selectedId);
+  applyFiltersAndRender();
+}
+
+function getCachedAccountUserId() {
+  try {
+    return localStorage.getItem(ACCOUNT_CACHE_USER_KEY);
+  } catch (error) {
+    console.warn('No se pudo leer el identificador de cuenta local:', error);
+    return null;
+  }
+}
+
+function localAccountMarkerRows(userId) {
+  return [
+    ...Array.from(AppState.favorites, museumId => ({
+      user_id: userId,
+      museum_id: String(museumId),
+      marker_type: 'favorite'
+    })),
+    ...Array.from(AppState.visitedMuseums, museumId => ({
+      user_id: userId,
+      museum_id: String(museumId),
+      marker_type: 'visited'
+    }))
+  ];
+}
+
+async function syncAccountMarkers(mergeLocal) {
+  if (!AccountSync.client || !AccountSync.user || AccountSync.syncing) return false;
+
+  const user = AccountSync.user;
+  const userId = user.id;
+  AccountSync.syncing = true;
+  updateAccountControls();
+  setAccountStatus('Sincronizando tus favoritos y visitas...', 'info');
+
+  try {
+    const { data, error } = await AccountSync.client
+      .from(ACCOUNT_MARKERS_TABLE)
+      .select('museum_id, marker_type')
+      .eq('user_id', userId);
+    if (error) throw error;
+
+    let rows = Array.isArray(data) ? data : [];
+    if (mergeLocal) {
+      const localRows = localAccountMarkerRows(userId);
+      const remoteKeys = new Set(rows.map(row => `${row.marker_type}:${row.museum_id}`));
+      const localOnlyRows = localRows.filter(row => !remoteKeys.has(`${row.marker_type}:${row.museum_id}`));
+
+      if (localOnlyRows.length) {
+        const { error: saveError } = await AccountSync.client
+          .from(ACCOUNT_MARKERS_TABLE)
+          .upsert(localOnlyRows, { onConflict: 'user_id,museum_id,marker_type' });
+        if (saveError) throw saveError;
+
+        const { data: mergedData, error: mergeError } = await AccountSync.client
+          .from(ACCOUNT_MARKERS_TABLE)
+          .select('museum_id, marker_type')
+          .eq('user_id', userId);
+        if (mergeError) throw mergeError;
+        rows = Array.isArray(mergedData) ? mergedData : [];
+      }
+    }
+
+    if (!AccountSync.user || AccountSync.user.id !== userId) return false;
+
+    AppState.favorites = new Set(
+      rows.filter(row => row.marker_type === 'favorite').map(row => row.museum_id)
+    );
+    AppState.visitedMuseums = new Set(
+      rows.filter(row => row.marker_type === 'visited').map(row => row.museum_id)
+    );
+    AccountSync.ready = true;
+    try {
+      localStorage.setItem(ACCOUNT_CACHE_USER_KEY, userId);
+    } catch (error) {
+      console.warn('No se pudo guardar el identificador de cuenta local:', error);
+      setAccountStatus('La cuenta sincronizó tus marcas, pero este navegador no pudo guardar la preferencia local.', 'error');
+    }
+    saveFavoritesToStorage();
+    saveVisitedMuseumsToStorage();
+    applyFiltersAndRender();
+    if (DOM.accountStatus.dataset.state !== 'error') {
+      setAccountStatus(`Sincronizado con la cuenta ${user.email || ''}.`, 'success');
+    }
+    return true;
+  } catch (error) {
+    console.error('No se pudieron sincronizar favoritos y visitas:', error);
+    AccountSync.ready = false;
+    setAccountStatus('No se pudieron sincronizar las marcas. Revisa tu conexión e inténtalo de nuevo.', 'error');
+    showToast('No se pudieron sincronizar tus favoritos y visitas.');
+    return false;
+  } finally {
+    AccountSync.syncing = false;
+    updateAccountControls();
+    if (AccountSync.user && AccountSync.user.id !== userId && !AccountSync.ready) {
+      void syncAccountMarkers(getCachedAccountUserId() !== AccountSync.user.id);
+    }
+  }
+}
+
+async function persistAccountMarker(museumId, markerType, isActive) {
+  if (!AccountSync.user) return true;
+  if (!AccountSync.ready) {
+    showToast('La cuenta aún no está sincronizada. Inténtalo de nuevo en un momento.');
+    return false;
+  }
+
+  const userId = AccountSync.user.id;
+  const pendingKey = `${userId}:${markerType}:${museumId}`;
+  if (AccountSync.pendingMarkers.has(pendingKey)) return false;
+  AccountSync.pendingMarkers.add(pendingKey);
+
+  try {
+    let result;
+    if (isActive) {
+      result = await AccountSync.client
+        .from(ACCOUNT_MARKERS_TABLE)
+        .upsert({
+          user_id: userId,
+          museum_id: String(museumId),
+          marker_type: markerType
+        }, { onConflict: 'user_id,museum_id,marker_type' });
+    } else {
+      result = await AccountSync.client
+        .from(ACCOUNT_MARKERS_TABLE)
+        .delete()
+        .eq('user_id', userId)
+        .eq('museum_id', String(museumId))
+        .eq('marker_type', markerType);
+    }
+
+    if (result.error) throw result.error;
+    if (!AccountSync.user || AccountSync.user.id !== userId) return false;
+    setAccountStatus('Cambios sincronizados con tu cuenta.', 'success');
+    return true;
+  } catch (error) {
+    console.error('No se pudo guardar una marca en Supabase:', error);
+    setAccountStatus('No se pudo sincronizar el cambio. Inténtalo de nuevo.', 'error');
+    showToast('No se pudo sincronizar el cambio; no se guardó.');
+    return false;
+  } finally {
+    AccountSync.pendingMarkers.delete(pendingKey);
+  }
+}
+
+function refreshAccountMarkersOnFocus() {
+  if (AccountSync.user && AccountSync.ready && !AccountSync.syncing) {
+    void syncAccountMarkers(false);
+  }
 }
 
 function initTheme() {
@@ -776,7 +1139,7 @@ function initEventHandlers() {
   DOM.closeModalBtn.addEventListener('click', closeModal);
   DOM.btnToggleVisited.addEventListener('click', () => {
     if (AppState.selectedId) {
-      toggleVisitedMuseum(AppState.selectedId);
+      void toggleVisitedMuseum(AppState.selectedId);
     }
   });
   DOM.modal.addEventListener('click', (e) => {
@@ -1108,13 +1471,13 @@ function renderMuseumsList(museos) {
       const favBtn = e.target.closest('.fav-btn');
       if (favBtn) {
         e.stopPropagation();
-        toggleFavorite(museo.id);
+        void toggleFavorite(museo.id);
         return;
       }
 
       if (e.target.closest('[data-action="visited"]')) {
         e.stopPropagation();
-        toggleVisitedMuseum(museo.id);
+        void toggleVisitedMuseum(museo.id);
         return;
       }
 
@@ -1485,11 +1848,14 @@ function updateVisitedButton(id) {
   }
 }
 
-function toggleVisitedMuseum(id) {
+async function toggleVisitedMuseum(id) {
   const museo = findMuseumById(id);
   if (!museo || museo.isNocheMuseosOnly) return;
 
-  if (AppState.visitedMuseums.has(id)) {
+  const isVisited = AppState.visitedMuseums.has(id);
+  if (!await persistAccountMarker(id, 'visited', !isVisited)) return;
+
+  if (isVisited) {
     AppState.visitedMuseums.delete(id);
     showToast(`Visita eliminada: ${museo.nombre}`);
   } else {
@@ -1507,11 +1873,14 @@ function toggleVisitedMuseum(id) {
 /**
  * Alterna el estado de favorito de un museo
  */
-function toggleFavorite(id) {
+async function toggleFavorite(id) {
   const museo = findMuseumById(id);
   const name = museo ? museo.nombre : 'Museo';
 
-  if (AppState.favorites.has(id)) {
+  const isFavorited = AppState.favorites.has(id);
+  if (!await persistAccountMarker(id, 'favorite', !isFavorited)) return;
+
+  if (isFavorited) {
     AppState.favorites.delete(id);
     showToast(`Eliminado de favoritos: ${name}`);
   } else {
