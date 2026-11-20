@@ -724,8 +724,14 @@ async function persistAccountMarker(museumId, markerType, isActive) {
     return true;
   } catch (error) {
     console.error('No se pudo guardar una marca en Supabase:', error);
-    setAccountStatus('No se pudo sincronizar el cambio. Inténtalo de nuevo.', 'error');
-    showToast('No se pudo sincronizar el cambio; no se guardó.');
+    const schemaNeedsUpdate = markerType === 'planned' && error && error.code === '23514';
+    const message = schemaNeedsUpdate
+      ? 'Supabase aún no permite «Por visitar». Ejecuta de nuevo supabase/schema.sql en el SQL Editor y vuelve a intentarlo.'
+      : 'No se pudo sincronizar el cambio. Inténtalo de nuevo.';
+    setAccountStatus(message, 'error');
+    showToast(schemaNeedsUpdate
+      ? 'Actualiza Supabase ejecutando supabase/schema.sql.'
+      : 'No se pudo sincronizar el cambio; no se guardó.');
     return false;
   } finally {
     AccountSync.pendingMarkers.delete(pendingKey);
@@ -852,6 +858,9 @@ function initData() {
     const sicMuseos = SIC_MUSEOS_DATA.map(source => {
       const sicId = Number(source.museo_id);
       const curated = curatedBySicId.get(String(sicId));
+      const editorial = typeof SIC_MUSEUM_EDITORIAL !== 'undefined'
+        ? SIC_MUSEUM_EDITORIAL[sicId]
+        : null;
       const theme = String(source.museo_tematica_n1 || '').trim();
       const mappedCategory = theme ? getSicCategory(theme) : '';
       const category = mappedCategory && mappedCategory !== 'Sin clasificar'
@@ -862,7 +871,6 @@ function initData() {
         source.museo_colonia,
         source.museo_cp
       ].map(value => String(value || '').trim()).filter(Boolean).join(', ');
-      const topicDescription = theme ? `Temática registrada por SIC: ${theme}.` : '';
       const sicWebsites = [
         source.pagina_web,
         source.pagina_web2,
@@ -897,9 +905,9 @@ function initData() {
         costo: (curated && curated.costo) || 'No publicado por SIC; consulta el recinto antes de tu visita.',
         esGratis: curated ? curated.esGratis : false,
         transporte: (curated && curated.transporte) || 'Consulta las rutas de transporte público disponibles.',
-        destacado: (curated && curated.destacado) || theme || 'Ficha registrada en el directorio SIC Cultura.',
-        descripcion: (curated && curated.descripcion) || topicDescription ||
-          'Ficha del directorio del Sistema de Información Cultural (SIC).',
+        destacado: (editorial && editorial.destacado) || (curated && curated.destacado) || '',
+        descripcion: (editorial && editorial.descripcion) || (curated && curated.descripcion) || '',
+        fuenteEditorial: (editorial && editorial.fuente) || '',
         imagen: `https://sic.cultura.gob.mx/imgthumb/museo_${sicId}.png`,
         imagenFallback: curated ? curated.imagen : '',
         sitioWeb: sicWebsites[0] || (curated && curated.sitioWeb) || '',
@@ -1539,9 +1547,10 @@ function renderMuseumsList(museos) {
           </div>
           <h3 class="card-title" title="${name}">${name}</h3>
           <p class="card-alcaldia">📍 ${alcaldia} · ${address}</p>
-          <div class="card-highlight" title="${highlight}">
-            ⭐ <strong>Destacado:</strong> ${highlight}
-          </div>
+          ${highlight ? `
+            <div class="card-highlight" title="${highlight}">
+              ⭐ <strong>Destacado:</strong> ${highlight}
+            </div>` : ''}
         </div>
 
         <div class="card-actions">
@@ -1696,7 +1705,7 @@ function openDetailsModal(id) {
     DOM.modalImageCredit.style.display = 'none';
   }
 
-  const infoUrl = museo.sitioWeb || museo.fuente || sicFichaUrl;
+  const infoUrl = museo.sitioWeb || museo.fuenteEditorial || museo.fuente || sicFichaUrl;
   if (infoUrl) {
     DOM.btnOfficialWeb.href = infoUrl;
     DOM.btnOfficialWeb.style.display = 'inline-flex';
