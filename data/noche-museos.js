@@ -58,6 +58,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: '2.º Callejón de San Juan de Dios 25, colonia Guerrero, Cuauhtémoc.',
     coordinates: [19.4381241, -99.1428994],
+    venueImage: 'data/noche-museos/sedes/noche-la-nana.jpg',
     event: {
       title: 'Nocturnos',
       image: 'data/noche-museos/la-nana.jpg',
@@ -74,9 +75,10 @@ const NOCHE_MUSEOS_DATA = [
     id: 'noche-fundacion-miguel-aleman',
     name: 'Fundación Miguel Alemán',
     category: 'Historia',
-    alcaldia: 'Sede por confirmar',
-    address: 'El cartel no indica dirección.',
-    coordinates: null,
+    alcaldia: 'Miguel Hidalgo',
+    address: 'Rubén Darío 187, Polanco, Miguel Hidalgo.',
+    coordinates: [19.429314, -99.186638],
+    venueImage: 'data/noche-museos/sedes/noche-fundacion-miguel-aleman.jpg',
     event: {
       title: 'La señora en su balcón',
       image: 'data/noche-museos/fundacion-miguel-aleman.jpg',
@@ -109,6 +111,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Tlalnepantla de Baz, Estado de México',
     address: 'Ignacio Manuel Altamirano 3, Tlalnepantla, Estado de México.',
     coordinates: [19.5291258, -99.231587],
+    venueImage: 'data/noche-museos/sedes/noche-hacienda-santa-monica.jpg',
     event: {
       title: 'Tarde de bohemia',
       image: 'data/noche-museos/hacienda-santa-monica.jpg',
@@ -128,6 +131,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: 'Torre Cuarzo, Paseo de la Reforma 26, piso 25, colonia Juárez, Ciudad de México.',
     coordinates: [19.428, -99.1658],
+    venueImage: 'data/noche-museos/sedes/noche-mystika.jpg',
     event: {
       title: 'El arte que habita en ti',
       image: 'data/noche-museos/mystika.jpg',
@@ -161,6 +165,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Gustavo A. Madero',
     address: 'Otavalo 7, esquina con avenida IPN, colonia Lindavista, Gustavo A. Madero.',
     coordinates: [19.4935358, -99.1333492],
+    venueImage: 'data/noche-museos/sedes/noche-futurama.jpg',
     event: {
       title: 'Hysterika: tributo a Depeche Mode',
       image: 'data/noche-museos/centro-cultural-futurama.jpg',
@@ -216,6 +221,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Miguel Hidalgo',
     address: 'Calzada México-Tacuba s/n, colonia Popotla, Miguel Hidalgo.',
     coordinates: [19.4545, -99.177],
+    venueImage: 'data/noche-museos/sedes/noche-arbol-noche-victoriosa.jpg',
     event: {
       title: 'Universos de papel',
       image: 'data/noche-museos/museo-arbol-noche-victoriosa.jpg',
@@ -299,6 +305,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: 'Avenida Bucareli 35, local 4 (entrada por Donato Guerra), colonia Juárez.',
     coordinates: [19.4348, -99.1476],
+    venueImage: 'data/noche-museos/sedes/noche-mumedi.jpg',
     event: {
       title: 'Cata de mezcal Destreza + Museo',
       image: 'data/noche-museos/mumedi.jpg',
@@ -317,6 +324,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Álvaro Obregón',
     address: 'Avenida Revolución 1747, colonia San Ángel, Álvaro Obregón.',
     coordinates: [19.3448267, -99.1908681],
+    venueImage: 'data/noche-museos/sedes/noche-casa-jaime-sabines.jpg',
     event: {
       title: 'Lecturas, taller y conversatorio',
       image: 'data/noche-museos/casa-jaime-sabines.jpg',
@@ -334,6 +342,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: 'Toledo 22, colonia Juárez, Cuauhtémoc.',
     coordinates: [19.4233475, -99.1721209],
+    venueImage: 'data/noche-museos/sedes/noche-casa-chiapas.jpg',
     event: {
       title: 'Noche de Museos en Casa Chiapas',
       image: 'data/noche-museos/casa-chiapas.jpg',
@@ -364,6 +373,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: 'Sede histórica del Senado, Xicoténcatl 9, Centro Histórico.',
     coordinates: [19.4358, -99.1394],
+    venueImage: 'data/noche-museos/sedes/noche-senado-xico.jpg',
     event: {
       title: 'Concierto de Mex Kuri’s y Sayari',
       image: 'data/noche-museos/senado-xico.jpg',
@@ -394,6 +404,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Milpa Alta',
     address: 'Bolívar Poniente s/n, San Jerónimo Miacatlán, Milpa Alta.',
     coordinates: [19.177, -99.012],
+    venueImage: 'data/noche-museos/sedes/noche-faro-milpa-alta.jpg',
     event: {
       title: 'Florecer sin miedo',
       image: 'data/noche-museos/faro-milpa-alta.jpg',
@@ -446,6 +457,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: 'Valentín Gómez Farías 52, colonia San Rafael, alcaldía Cuauhtémoc, Ciudad de México.',
     coordinates: [19.4370876, -99.1583423],
+    venueImage: 'data/noche-museos/sedes/noche-casa-cultura-postal.jpg',
     event: {
       title: 'Marco Polo: rock, ska y cumbia',
       image: 'data/noche-museos/casa-cultura-postal.jpg',
@@ -499,6 +511,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Azcapotzalco',
     address: 'Avenida Cultura Norte s/n, frente al Metrobús El Rosario, Azcapotzalco, Ciudad de México.',
     coordinates: [19.5072804, -99.2001501],
+    venueImage: 'data/noche-museos/sedes/noche-faro-azcapotzalco.jpg',
     event: {
       title: '25N: actividades por el Día Internacional de la Eliminación de la Violencia contra las Mujeres',
       image: 'data/noche-museos/faro-azcapotzalco.jpg',
@@ -516,6 +529,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Milpa Alta',
     address: 'Avenida Dr. Gastón Melo 40, planta alta, Tenantitla, San Antonio Tecómitl, Milpa Alta, Ciudad de México.',
     coordinates: [19.2217199, -98.9953331],
+    venueImage: 'data/noche-museos/sedes/noche-faro-tecomitl.jpg',
     event: {
       title: 'Raíces tejidas',
       image: 'data/noche-museos/faro-tecomitl.jpg',
@@ -559,6 +573,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: 'Paseo de la Reforma, esquina Lieja, colonia Juárez, Ciudad de México.',
     coordinates: [19.4230586, -99.1759093],
+    venueImage: 'data/noche-museos/sedes/noche-centro-cultura-digital.jpg',
     event: {
       title: 'Sesiones audiovisuales: Desobediencia',
       image: 'data/noche-museos/centro-cultura-digital.jpg',
@@ -591,6 +606,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: 'San Ildefonso 40, Barrio Universitario, Centro Histórico, Cuauhtémoc, C.P. 06020, Ciudad de México.',
     coordinates: [19.435868, -99.130635],
+    venueImage: 'data/noche-museos/sedes/noche-casa-tlaxcala.jpg',
     event: {
       title: 'Pastorela ¿Y si sí?',
       image: 'data/noche-museos/casa-tlaxcala.jpg',
@@ -625,6 +641,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: 'Glorieta de los Insurgentes, local 25, Roma Norte, Cuauhtémoc, Ciudad de México.',
     coordinates: [19.423439, -99.163155],
+    venueImage: 'data/noche-museos/sedes/noche-centro-cultural-xavier-villaurrutia.jpg',
     event: {
       title: 'Diarios de Habitación',
       image: 'data/noche-museos/centro-cultural-xavier-villaurrutia.jpg',
@@ -644,6 +661,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: 'Marsella 39, Col. Juárez, Cuauhtémoc, C.P. 06600, Ciudad de México.',
     coordinates: [19.426217, -99.157833],
+    venueImage: 'data/noche-museos/sedes/noche-academia-arte-florencia.jpg',
     event: {
       title: '17.° Aniversario Noche de Museos: Arte, Música y Teatro',
       image: 'data/noche-museos/academia-arte-florencia.jpg',
@@ -678,6 +696,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: 'Abraham González 77, Col. Juárez, Cuauhtémoc, C.P. 06600, Ciudad de México.',
     coordinates: [19.428312, -99.153920],
+    venueImage: 'data/noche-museos/sedes/noche-el77-centro-cultural.jpg',
     event: {
       title: 'Perritos en Resistencia & Flash Tatu',
       image: 'data/noche-museos/el77-centro-cultural.jpg',
@@ -697,6 +716,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Miguel Hidalgo',
     address: 'Lago Mayor, II Sección del Bosque de Chapultepec, Miguel Hidalgo, C.P. 11100, Ciudad de México.',
     coordinates: [19.414441, -99.198943],
+    venueImage: 'data/noche-museos/sedes/noche-lago-algo.jpg',
     event: {
       title: 'Noche de Museos en LagoAlgo',
       image: 'data/noche-museos/lago-algo.jpg',
@@ -716,6 +736,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: 'Calle Zacatecas 120, Col. Roma Norte, Cuauhtémoc, C.P. 06700, Ciudad de México.',
     coordinates: [19.416805, -99.161041],
+    venueImage: 'data/noche-museos/sedes/noche-universidad-comunicacion.jpg',
     event: {
       title: 'Pinta tu Frecuencia',
       image: 'data/noche-museos/universidad-comunicacion.jpg',
@@ -763,6 +784,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Miguel Hidalgo',
     address: 'Bosque de Chapultepec 1.ª Sección (Acceso peatonal 4, cerca del Mercado de Flores), San Miguel Chapultepec, Miguel Hidalgo, C.P. 11850, Ciudad de México.',
     coordinates: [19.418306, -99.186639],
+    venueImage: 'data/noche-museos/sedes/noche-quinta-colorada.jpg',
     event: {
       title: 'Vasoterapia y Concierto de Omniblues',
       image: 'data/noche-museos/quinta-colorada.jpg',
@@ -812,6 +834,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: 'Francisco I. Madero 7, Centro Histórico, Cuauhtémoc, C.P. 06000, Ciudad de México.',
     coordinates: [19.433917, -99.140222],
+    venueImage: 'data/noche-museos/sedes/noche-soumaya-atrio-san-francisco.jpg',
     event: {
       title: 'Noche de Museos en Atrio de San Francisco',
       image: 'data/noche-museos/museo-soumaya.jpg',
@@ -831,6 +854,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: 'Orizaba 24, Roma Norte, Cuauhtémoc, C.P. 06700, Ciudad de México.',
     coordinates: [19.421522, -99.158739],
+    venueImage: 'data/noche-museos/sedes/noche-casul-unam.jpg',
     event: {
       title: 'Cineclub CASUL: El Cadáver de la Novia',
       image: 'data/noche-museos/casul-unam.jpg',
@@ -880,6 +904,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Tlalnepantla de Baz',
     address: 'Plaza Dr. Gustavo Baz Prada s/n, Centro, Tlalnepantla de Baz, C.P. 54000, Estado de México.',
     coordinates: [19.539650, -99.195033],
+    venueImage: 'data/noche-museos/sedes/noche-instituto-cultural-tlalnepantla.jpg',
     event: {
       title: 'Taller de grabado sin prensa: Huella Mágica',
       image: 'data/noche-museos/instituto-cultural-tlalnepantla.jpg',
@@ -899,6 +924,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Gustavo A. Madero',
     address: 'Av. Wilfrido Massieu s/n, esq. Av. IPN, Zacatenco, Gustavo A. Madero, C.P. 07738, Ciudad de México.',
     coordinates: [19.500344, -99.135211],
+    venueImage: 'data/noche-museos/sedes/noche-centro-cultural-jaime-torres-bodet.jpg',
     event: {
       title: 'Ponencia: Violencias y resistencias de las mujeres musulmanas',
       image: 'data/noche-museos/centro-cultural-jaime-torres-bodet.jpg',
@@ -918,6 +944,7 @@ const NOCHE_MUSEOS_DATA = [
     alcaldia: 'Cuauhtémoc',
     address: 'Lic. Primo de Verdad 10, Centro Histórico, Cuauhtémoc, C.P. 06060, Ciudad de México.',
     coordinates: [19.434444, -99.130389],
+    venueImage: 'data/noche-museos/sedes/noche-casa-primera-imprenta.jpg',
     event: {
       title: 'Colectivo Ajá (Agua): Memorial y Ritualidad (Ausencia/Presencia)',
       image: 'data/noche-museos/casa-primera-imprenta.jpg',
@@ -989,3 +1016,4 @@ const NOCHE_MUSEOS_DATA = [
     }
   }
 ];
+

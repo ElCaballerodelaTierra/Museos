@@ -1003,8 +1003,8 @@ function initData() {
       transporte: 'Consulta las opciones de transporte para esta sede.',
       destacado: record.event.title,
       descripcion: 'Sede participante de la Noche de Museos; no forma parte del catálogo general de museos.',
-      imagen: FALLBACK_IMAGE_URL,
-      imagenFallback: '',
+      imagen: record.venueImage || (record.event && record.event.image) || FALLBACK_IMAGE_URL,
+      imagenFallback: (record.event && record.event.image && record.venueImage) ? record.event.image : '',
       sitioWeb: '',
       fuente: '',
       sicId: null,
@@ -1245,7 +1245,6 @@ function initEventHandlers() {
       ? 'Mostrando las sedes participantes de Noche de Museos'
       : 'Mostrando el catálogo general de museos');
     applyFiltersAndRender();
-    fitMapToMarkers();
   });
 
   DOM.themeToggle.addEventListener('click', () => {
@@ -1503,8 +1502,9 @@ function buildPopupContent(museo) {
   const freeBadgeHtml = museo.esGratis 
     ? `<span class="badge badge-free">Entrada Libre</span>` 
     : '';
-  const image = escapeHtml(museo.imagen);
-  const imageFallback = escapeHtml(museo.imagenFallback);
+  const eventPoster = AppState.showOnlyNocheMuseos && museo.nocheMuseos && museo.nocheMuseos.image;
+  const image = escapeHtml(eventPoster || museo.imagen);
+  const imageFallback = escapeHtml(eventPoster ? museo.imagen : museo.imagenFallback);
   const name = escapeHtml(museo.nombre);
   const category = escapeHtml(museo.categoria);
   const alcaldia = escapeHtml(museo.alcaldia);
@@ -1765,9 +1765,10 @@ function openDetailsModal(id) {
 
   AppState.selectedId = id;
 
-  DOM.modalImage.src = museo.imagen;
+  const eventPoster = AppState.showOnlyNocheMuseos && museo.nocheMuseos && museo.nocheMuseos.image;
+  DOM.modalImage.src = eventPoster || museo.imagen;
   DOM.modalImage.alt = museo.nombre;
-  DOM.modalImage.dataset.fallback = museo.imagenFallback;
+  DOM.modalImage.dataset.fallback = eventPoster ? museo.imagen : museo.imagenFallback;
   DOM.modalImage.onerror = () => handleMuseumImageError(DOM.modalImage);
 
   const meta = CATEGORY_META[museo.categoria] || { color: '#64748b', icon: '🏛️' };
