@@ -1014,6 +1014,20 @@ const NOCHE_MUSEOS_DATA = [
       contact: '55 5518 8312 | www.choco-storymexico.com/zocalo | @chocostory.zocalo.',
       format: 'Presencial.'
     }
+  },
+  {
+    museumId: 'museo-casa-kahlo',
+    event: {
+      title: 'Fuego Nuevo',
+      image: 'data/noche-museos/museo-casa-kahlo.jpg',
+      activities: 'Teatro de títeres a cargo de SombrAustral. Degustación a cargo de Frida Bakwa.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:00 horas.',
+      admission: '$250 MXN.',
+      capacity: 'Cupo máximo de 50 personas.',
+      registration: 'Boletos en boleto.museocasakahlo.org.',
+      contact: 'museocasakahlo.org | Museo Casa Kahlo en Facebook e Instagram.',
+      format: 'Presencial.'
+    }
   }
 ];
 
