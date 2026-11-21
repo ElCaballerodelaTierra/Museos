@@ -552,7 +552,7 @@ async function handleAccountSignIn(event) {
     });
     if (error) throw error;
 
-    setAccountStatus('Te enviamos un enlace de acceso. Revisa tu correo para continuar.', 'success');
+    setAccountStatus('Te enviamos un enlace de acceso. Revisa tu correo para continuar, si el correo demora en llegar te sugerimos revisar la carpeta de SPAM.', 'success');
   } catch (error) {
     console.error('No se pudo enviar el enlace de acceso:', error);
     setAccountStatus('No se pudo enviar el enlace. Revisa el correo e inténtalo de nuevo.', 'error');
