@@ -656,7 +656,7 @@ html, body {
 .card-thumb-wrapper {
   position: relative;
   width: 105px;
-  height: 105px;
+  align-self: stretch;
   flex-shrink: 0;
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -664,6 +664,9 @@ html, body {
 }
 
 .card-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -675,22 +678,18 @@ html, body {
 }
 
 .fav-btn {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-full);
-  background: var(--floating-control-bg);
-  backdrop-filter: blur(4px);
-  border: none;
-  cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background-color: var(--surface-control);
+  cursor: pointer;
+  color: var(--text-muted);
   transition: all 0.15s ease;
-  z-index: 5;
 }
 
 .fav-btn svg {
@@ -699,13 +698,14 @@ html, body {
 }
 
 .fav-btn:hover {
-  transform: scale(1.15);
-  background: var(--floating-control-hover);
-  color: #ef4444;
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .fav-btn.favorited {
-  color: #ef4444;
+  border-color: var(--primary);
+  background-color: var(--surface-selected);
+  color: var(--primary);
 }
 
 .card-content {
@@ -897,7 +897,6 @@ html, body {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  padding-left: 0.45rem;
   margin-bottom: 0.35rem;
   white-space: nowrap;
   overflow: hidden;
@@ -908,7 +907,7 @@ html, body {
   font-size: 0.74rem;
   color: var(--card-highlight-text);
   background-color: var(--card-highlight-bg);
-  padding: 0.2rem 0.35rem;
+  padding: 0.2rem 0.35rem 0.2rem 0;
   border-radius: var(--radius-sm);
   margin-bottom: 0.5rem;
   line-height: 1.3;
@@ -923,23 +922,6 @@ html, body {
   align-items: center;
   justify-content: space-between;
   margin-top: auto;
-}
-
-.action-link {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--primary);
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0;
-}
-
-.action-link:hover {
-  text-decoration: underline;
 }
 
 .action-btn-sm {
@@ -983,10 +965,17 @@ html, body {
   background-color: var(--map-wrapper-bg);
 }
 
-#map {
+#map,
+.leaflet-container {
   width: 100%;
   height: 100%;
   z-index: 1;
+  background-color: var(--bg-page);
+}
+
+body.dark-map #map,
+body.dark-map .leaflet-container {
+  background-color: #121820;
 }
 
 /* Controles flotantes en el mapa */
@@ -1223,6 +1212,48 @@ html, body {
 .popup-actions {
   display: flex;
   gap: 0.5rem;
+}
+
+.popup-marker-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-bottom: 0.6rem;
+}
+
+.popup-marker-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 46px;
+  padding: 0.3rem 0.2rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-control);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.popup-marker-btn:hover,
+.popup-marker-btn.is-active {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.popup-marker-btn.is-active {
+  background-color: var(--surface-selected);
+}
+
+.popup-marker-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
 }
 
 .popup-btn {
@@ -1761,10 +1792,15 @@ html, body {
 
   .mobile-view-toggle {
     flex-shrink: 0;
+    box-sizing: border-box;
+    height: 34px;
     padding: 2px;
+    align-items: stretch;
   }
 
   .toggle-btn {
+    display: inline-flex;
+    align-items: center;
     padding: 0.3rem 0.42rem;
     font-size: 0.72rem;
   }
@@ -1796,6 +1832,7 @@ html, body {
   }
 
   .mobile-view-toggle {
+    height: 30px;
     padding: 1px;
   }
 
@@ -1812,6 +1849,60 @@ html, body {
 @media (max-width: 900px) and (orientation: landscape) {
   .mobile-view-toggle {
     display: none;
+  }
+
+  /* En apaisado hay espacio suficiente: mostrar Favoritos, Visitados y
+     Por visitar directamente en la barra, sin menú desplegable. */
+  #collectionMenu {
+    display: contents;
+  }
+
+  #collectionMenu .header-menu-trigger {
+    display: none;
+  }
+
+  #collectionMenu .header-menu-panel,
+  #collectionMenu .header-menu-panel.is-open {
+    display: contents;
+    position: static;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  #btnNearMe,
+  .header-menu .header-menu-trigger,
+  #collectionMenuPanel > #btnFavorites,
+  #collectionMenuPanel > #btnVisited,
+  #collectionMenuPanel > #btnPlanned {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 0;
+    flex-shrink: 0;
+    padding: 0;
+    justify-content: center;
+  }
+
+  #btnNearMe > svg,
+  .header-menu .header-menu-trigger > svg,
+  #collectionMenuPanel > .btn > svg {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  #collectionMenuPanel .header-action-label {
+    display: none;
+  }
+
+  /* Los contenedores de Favoritos y Por visitar conservan los contadores.
+     Al quitar sus etiquetas, no deben permanecer como un ítem flex vacío,
+     pues el `gap` desplaza el icono fuera del centro del botón. */
+  #collectionMenuPanel > #btnFavorites > #favLabel,
+  #collectionMenuPanel > #btnPlanned > #plannedLabel {
+    display: contents;
   }
 
   .app-container {
@@ -1887,4 +1978,8 @@ html, body {
 
 body.dark-map .leaflet-tile {
   filter: invert(100%) hue-rotate(180deg) brightness(90%) contrast(90%);
+}
+
+.leaflet-tile-container {
+  will-change: transform;
 }

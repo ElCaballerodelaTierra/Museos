@@ -832,23 +832,35 @@ function initMap() {
   AppState.map = L.map('map', {
     center: CDMX_CENTER,
     zoom: DEFAULT_ZOOM,
-    zoomControl: false // Lo reubicaremos
+    zoomControl: false,
+    preferCanvas: true
   });
 
   // Reubicar zoom control a la esquina superior izquierda
   L.control.zoom({ position: 'topleft' }).addTo(AppState.map);
 
+  const tileLayerOptions = {
+    keepBuffer: 8,
+    updateWhenZooming: false,
+    updateWhenIdle: true,
+    updateInterval: 150,
+    crossOrigin: true
+  };
+
   // Definir diferentes estilos de mapas
   AppState.baseTileLayers = {
     osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      ...tileLayerOptions,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19
     }),
     topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      ...tileLayerOptions,
       attribution: '&copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
       maxZoom: 17
     }),
     dark: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      ...tileLayerOptions,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19
     })
@@ -1137,6 +1149,18 @@ function initEventHandlers() {
     if (event.target.closest('button')) closeHeaderMenus();
   });
 
+  // Al pasar a apaisado los accesos de colección se muestran inline,
+  // así que cerramos cualquier panel que hubiera quedado abierto.
+  const collectionMenuBreakpoint = window.matchMedia('(max-width: 900px) and (orientation: portrait)');
+  const handleCollectionMenuBreakpointChange = () => {
+    if (!collectionMenuBreakpoint.matches) closeHeaderMenus();
+  };
+  if (collectionMenuBreakpoint.addEventListener) {
+    collectionMenuBreakpoint.addEventListener('change', handleCollectionMenuBreakpointChange);
+  } else if (collectionMenuBreakpoint.addListener) {
+    collectionMenuBreakpoint.addListener(handleCollectionMenuBreakpointChange);
+  }
+
   // Búsqueda de texto instantánea
   DOM.searchInput.addEventListener('input', (e) => {
     AppState.searchQuery = e.target.value.trim().toLowerCase();
@@ -1331,7 +1355,6 @@ function initEventHandlers() {
       if (museo && hasValidCoordinates(museo)) {
         focusMuseumOnMap(museo);
       }
-      // En móvil, cambiar automáticamente a vista de mapa
       switchToMapViewIfMobile();
     }
   });
@@ -1483,7 +1506,11 @@ function renderMapMarkers(museos) {
 
     // Contenido del popup
     const popupHtml = buildPopupContent(museo);
-    marker.bindPopup(popupHtml, { maxWidth: 280, minWidth: 260 });
+    marker.bindPopup(popupHtml, { maxWidth: 280, minWidth: 260, autoPanPadding: [20, 20] });
+
+    marker.on('popupopen', (event) => {
+      bindPopupMarkerActions(event.popup.getElement(), museo.id);
+    });
 
     marker.on('click', () => {
       selectMuseum(museo.id, false); // Selecciona y resalta en lista
@@ -1509,10 +1536,13 @@ function buildPopupContent(museo) {
   const category = escapeHtml(museo.categoria);
   const alcaldia = escapeHtml(museo.alcaldia);
   const horario = escapeHtml(museo.horario);
+  const isFavorited = AppState.favorites.has(museo.id);
+  const isVisited = AppState.visitedMuseums.has(museo.id);
+  const isPlanned = AppState.plannedMuseums.has(museo.id);
 
   return `
     <div class="popup-container">
-      <img src="${image}" data-fallback="${imageFallback}" alt="${name}" class="popup-header-img" onerror="handleMuseumImageError(this)">
+      <img src="${image}" data-fallback="${imageFallback}" alt="${name}" class="popup-header-img" loading="lazy" decoding="async" onerror="handleMuseumImageError(this)">
       <div class="popup-body">
         <div class="popup-badge-row">
           <span class="badge badge-category" style="background-color: ${meta.color}">${category}</span>
@@ -1521,6 +1551,20 @@ function buildPopupContent(museo) {
         <h4 class="popup-title">${name}</h4>
         <p class="popup-address">📍 ${alcaldia}</p>
         <p class="popup-schedule">🕒 ${horario}</p>
+        <div class="popup-marker-actions" role="group" aria-label="Estado del museo">
+          <button class="popup-marker-btn ${isFavorited ? 'is-active' : ''}" type="button" data-popup-marker-action="favorite" aria-pressed="${isFavorited}" title="${isFavorited ? 'Quitar de favoritos' : 'Guardar en favoritos'}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <span>Favorito</span>
+          </button>
+          <button class="popup-marker-btn ${isVisited ? 'is-active' : ''}" type="button" data-popup-marker-action="visited" aria-pressed="${isVisited}" title="${isVisited ? 'Quitar marca de visitado' : 'Marcar como visitado'}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="${isVisited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <span>Visitado</span>
+          </button>
+          <button class="popup-marker-btn ${isPlanned ? 'is-active' : ''}" type="button" data-popup-marker-action="planned" aria-pressed="${isPlanned}" title="${isPlanned ? 'Quitar de Por visitar' : 'Añadir a Por visitar'}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="${isPlanned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4V4.75Z"></path></svg>
+            <span>Más tarde</span>
+          </button>
+        </div>
         <div class="popup-actions">
           <button class="btn btn-primary popup-btn" onclick="openDetailsModal('${museo.id}')">
             Ver Detalles
@@ -1529,6 +1573,46 @@ function buildPopupContent(museo) {
       </div>
     </div>
   `;
+}
+
+function bindPopupMarkerActions(popupElement, museumId) {
+  if (!popupElement) return;
+
+  popupElement.querySelectorAll('[data-popup-marker-action]').forEach(button => {
+    button.addEventListener('click', async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const action = button.dataset.popupMarkerAction;
+      if (action === 'favorite') await toggleFavorite(museumId);
+      if (action === 'visited') await toggleVisitedMuseum(museumId);
+      if (action === 'planned') await togglePlannedMuseum(museumId);
+
+      updatePopupMarkerActions(popupElement, museumId);
+    });
+  });
+}
+
+function updatePopupMarkerActions(popupElement, museumId) {
+  const states = {
+    favorite: AppState.favorites.has(museumId),
+    visited: AppState.visitedMuseums.has(museumId),
+    planned: AppState.plannedMuseums.has(museumId)
+  };
+  const labels = {
+    favorite: ['Guardar en favoritos', 'Quitar de favoritos'],
+    visited: ['Marcar como visitado', 'Quitar marca de visitado'],
+    planned: ['Añadir a Por visitar', 'Quitar de Por visitar']
+  };
+
+  popupElement.querySelectorAll('[data-popup-marker-action]').forEach(button => {
+    const action = button.dataset.popupMarkerAction;
+    const isActive = states[action];
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+    button.title = labels[action][isActive ? 1 : 0];
+    button.querySelector('svg').setAttribute('fill', isActive ? 'currentColor' : 'none');
+  });
 }
 
 /**
@@ -1604,8 +1688,21 @@ function renderMuseumsList(museos) {
           <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4V4.75Z"></path>
         </svg>
       </button>`;
+    const favoriteButton = `
+      <button
+        type="button"
+        class="fav-btn ${isFavorited ? 'favorited' : ''}"
+        title="${isFavorited ? 'Quitar de favoritos' : 'Guardar en favoritos'}"
+        aria-label="${isFavorited ? 'Quitar de favoritos' : 'Guardar en favoritos'}"
+        aria-pressed="${isFavorited}"
+        data-fav-id="${museo.id}"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+      </button>`;
     const locateButton = hasValidCoordinates(museo) ? `
-      <button class="action-link" data-action="locate">
+      <button class="btn btn-outline action-btn-sm" type="button" data-action="locate">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
           <line x1="8" y1="2" x2="8" y2="18"></line>
@@ -1624,17 +1721,6 @@ function renderMuseumsList(museos) {
           loading="lazy"
           onerror="handleMuseumImageError(this)"
         />
-        <button 
-          class="fav-btn ${isFavorited ? 'favorited' : ''}" 
-          title="${isFavorited ? 'Quitar de favoritos' : 'Guardar en favoritos'}"
-          aria-label="${isFavorited ? 'Quitar de favoritos' : 'Guardar en favoritos'}"
-          aria-pressed="${isFavorited}"
-          data-fav-id="${museo.id}"
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-          </svg>
-        </button>
       </div>
 
       <div class="card-content">
@@ -1649,6 +1735,7 @@ function renderMuseumsList(museos) {
               ${distanceBadge}
             </div>
             <div class="card-marker-actions">
+              ${favoriteButton}
               ${visitedButton}
               ${plannedButton}
             </div>
@@ -1699,12 +1786,18 @@ function renderMuseumsList(museos) {
         return;
       }
 
-      // Selección normal / "Ver en mapa"
+      const isMobileMapSelection = window.innerWidth <= 900 && hasValidCoordinates(museo);
+      if (isMobileMapSelection) {
+        selectMuseum(museo.id, false);
+        switchToMapViewIfMobile();
+        requestAnimationFrame(() => focusMuseumOnMap(museo, { openPopup: false }));
+        return;
+      }
+
+      // Selección normal / "Ver en mapa" en escritorio.
       selectMuseum(museo.id, true);
 
-      // Si el usuario hace click en "Ver en mapa" en dispositivo móvil, llevarlo a la vista de mapa
-      if (e.target.closest('[data-action="locate"]') ||
-          (window.innerWidth <= 900 && hasValidCoordinates(museo))) {
+      if (e.target.closest('[data-action="locate"]')) {
         switchToMapViewIfMobile();
       }
     });
@@ -1737,22 +1830,47 @@ function selectMuseum(id, shouldFly = true) {
 }
 
 /**
- * Enfoca el mapa hacia las coordenadas del museo y abre su popup
+ * Enfoca el mapa hacia las coordenadas del museo y abre su popup con animación fluida
  */
-function focusMuseumOnMap(museo) {
+function focusMuseumOnMap(museo, { openPopup = true } = {}) {
   if (!hasValidCoordinates(museo)) return;
 
   const marker = AppState.markersMap.get(museo.id);
+  if (!openPopup) AppState.map.closePopup();
 
-  AppState.map.flyTo(museo.coordenadas, 16, {
-    duration: 1.2,
-    easeLinearity: 0.25
-  });
+  const currentCenter = AppState.map.getCenter();
+  const currentZoom = AppState.map.getZoom();
+  const targetLatLng = L.latLng(museo.coordenadas);
+  const distance = currentCenter.distanceTo(targetLatLng);
 
-  if (marker) {
-    setTimeout(() => {
+  const targetZoom = 16;
+
+  // Si ya estamos en zoom cercano (>= 14) y la distancia es moderada (< 4 km),
+  // panTo mantiene el mismo nivel de zoom, reutilizando los mosaicos en memoria sin parpadeos
+  if (currentZoom >= 14 && distance < 4000) {
+    AppState.map.panTo(targetLatLng, {
+      animate: true,
+      duration: 0.7,
+      easeLinearity: 0.25
+    });
+  } else {
+    // Para distancias mayores o desde vista alejada, flyTo suave
+    AppState.map.flyTo(targetLatLng, targetZoom, {
+      duration: 0.9,
+      easeLinearity: 0.35
+    });
+  }
+
+  if (marker && openPopup) {
+    let opened = false;
+    const showPopup = () => {
+      if (opened) return;
+      opened = true;
       marker.openPopup();
-    }, 600);
+    };
+
+    AppState.map.once('moveend', showPopup);
+    setTimeout(showPopup, 950);
   }
 }
 
@@ -2122,6 +2240,20 @@ async function togglePlannedMuseum(id) {
   }
 }
 
+function updateFavoriteButton(id) {
+  const isFavorited = AppState.favorites.has(id);
+  const card = document.getElementById(`card-${id}`);
+  const cardButton = card && card.querySelector('.fav-btn');
+  if (!cardButton) return;
+
+  cardButton.classList.toggle('favorited', isFavorited);
+  cardButton.setAttribute('aria-pressed', String(isFavorited));
+  const label = isFavorited ? 'Quitar de favoritos' : 'Guardar en favoritos';
+  cardButton.setAttribute('aria-label', label);
+  cardButton.title = label;
+  cardButton.querySelector('svg').setAttribute('fill', isFavorited ? 'currentColor' : 'none');
+}
+
 /**
  * Alterna el estado de favorito de un museo
  */
@@ -2141,7 +2273,10 @@ async function toggleFavorite(id) {
   }
 
   saveFavoritesToStorage();
-  applyFiltersAndRender();
+  updateFavoriteButton(id);
+  if (AppState.showOnlyFavorites) {
+    applyFiltersAndRender();
+  }
 }
 
 /**
