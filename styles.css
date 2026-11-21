@@ -876,7 +876,7 @@ html, body {
 .badge-distance {
   background-color: var(--distance-bg);
   color: var(--distance-text);
-  font-size: 0.68rem;
+  font-size: 0.6rem;
   font-weight: 700;
   padding: 0.15rem 0.45rem;
   border-radius: var(--radius-full);
@@ -1763,7 +1763,7 @@ body.dark-map .leaflet-container {
     width: 36px;
     height: 36px;
     flex-shrink: 0;
-    font-size: 1.65rem;
+    font-size: 1.1rem;
   }
 
   .app-title {
