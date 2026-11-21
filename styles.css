@@ -1876,10 +1876,7 @@ body.dark-map .leaflet-container {
   }
 
   #btnNearMe,
-  .header-menu .header-menu-trigger,
-  #collectionMenuPanel > #btnFavorites,
-  #collectionMenuPanel > #btnVisited,
-  #collectionMenuPanel > #btnPlanned {
+  .header-menu .header-menu-trigger {
     width: 40px;
     min-width: 40px;
     height: 40px;
@@ -1887,6 +1884,24 @@ body.dark-map .leaflet-container {
     flex-shrink: 0;
     padding: 0;
     justify-content: center;
+  }
+
+  /* Icono + contador deben caber dentro del botón: un ancho fijo de 40px
+     hacía desbordar textos como "(48)" en Favoritos, Visitados y Por visitar. */
+  #collectionMenuPanel > #btnFavorites,
+  #collectionMenuPanel > #btnVisited,
+  #collectionMenuPanel > #btnPlanned {
+    width: auto;
+    min-width: 40px;
+    max-width: none;
+    height: 40px;
+    min-height: 0;
+    flex-shrink: 0;
+    padding: 0 0.4rem;
+    justify-content: center;
+    gap: 0.15rem;
+    overflow: hidden;
+    white-space: nowrap;
   }
 
   #btnNearMe > svg,
@@ -1898,6 +1913,20 @@ body.dark-map .leaflet-container {
 
   #collectionMenuPanel .header-action-label {
     display: none;
+  }
+
+  #collectionMenuPanel > #btnFavorites > #favCountWrapper,
+  #collectionMenuPanel > #btnVisited > #visitedCountWrapper,
+  #collectionMenuPanel > #btnPlanned > #plannedCountWrapper,
+  #collectionMenuPanel > #btnFavorites > #favLabel > #favCountWrapper,
+  #collectionMenuPanel > #btnPlanned > #plannedLabel > #plannedCountWrapper {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
   }
 
   /* Los contenedores de Favoritos y Por visitar conservan los contadores.
