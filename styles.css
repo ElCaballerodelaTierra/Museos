@@ -723,16 +723,17 @@ html, body {
   justify-content: space-between;
   gap: 0.4rem;
   margin-bottom: 0.25rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .card-header-tags {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   min-width: 0;
   flex: 1;
+  overflow: hidden;
 }
 
 .visited-card-btn {
@@ -741,7 +742,8 @@ html, body {
   justify-content: center;
   gap: 0.25rem;
   flex-shrink: 0;
-  padding: 0.15rem 0.45rem;
+  height: 27px;
+  padding: 0 0.55rem;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-full);
   background-color: var(--surface-control);
@@ -749,21 +751,32 @@ html, body {
   font-family: inherit;
   font-size: 0.65rem;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
+[data-visited-icon] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+[data-visited-icon] svg {
+  display: block;
+}
+
 .visited-card-btn:hover {
-  border-color: var(--success-text);
-  color: var(--success-text);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
 }
 
 .visited-card-btn.visited {
   background-color: var(--success-bg);
   border-color: var(--success-text);
-  color: var(--success-text);
+  color: var(--text-muted);
 }
 
 .card-marker-actions {
@@ -829,28 +842,6 @@ html, body {
   color: var(--success-text);
 }
 
-.badge-free-icon {
-  display: none;
-}
-
-@container card-heading (max-width: 270px) {
-  .badge-free {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding-right: 0.35rem;
-    padding-left: 0.35rem;
-  }
-
-  .badge-free-label {
-    display: none;
-  }
-
-  .badge-free-icon {
-    display: inline;
-  }
-}
-
 @container card-heading (max-width: 245px) {
   .badge-category {
     display: inline-flex;
@@ -867,21 +858,16 @@ html, body {
   .badge-category-icon {
     display: inline;
   }
+}
 
-  .badge-free {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding-right: 0.35rem;
-    padding-left: 0.35rem;
-  }
-
-  .badge-free-label {
+@container card-heading (max-width: 320px) {
+  [data-visited-label] {
     display: none;
   }
 
-  .badge-free-icon {
-    display: inline;
+  .visited-card-btn {
+    padding-right: 0.35rem;
+    padding-left: 0.35rem;
   }
 }
 
@@ -1624,22 +1610,6 @@ html, body {
   .header-menu-panel .header-action-label,
   .header-menu-panel .account-button > span,
   .header-menu-panel .header-menu-item-label {
-    display: inline;
-  }
-
-  .card-header-tags .badge-free {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding-right: 0.35rem;
-    padding-left: 0.35rem;
-  }
-
-  .badge-free-label {
-    display: none;
-  }
-
-  .badge-free-icon {
     display: inline;
   }
 

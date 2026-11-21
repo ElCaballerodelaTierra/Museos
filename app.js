@@ -908,9 +908,9 @@ function initData() {
         : null;
       const theme = String(source.museo_tematica_n1 || '').trim();
       const mappedCategory = theme ? getSicCategory(theme) : '';
-      const category = mappedCategory && mappedCategory !== 'Sin clasificar'
-        ? mappedCategory
-        : (SIC_CATEGORY_OVERRIDES[sicId] || (curated && curated.categoria) || 'Sin clasificar');
+      const category = (curated && curated.categoria)
+        || SIC_CATEGORY_OVERRIDES[sicId]
+        || (mappedCategory && mappedCategory !== 'Sin clasificar' ? mappedCategory : 'Sin clasificar');
       const address = [
         source.museo_calle_numero,
         source.museo_colonia,
@@ -1030,6 +1030,7 @@ function getSicCategory(theme) {
 
 // SIC records without a useful theme are assigned by their main subject.
 const SIC_CATEGORY_OVERRIDES = {
+  1105: 'Cultura Popular',
   2234: 'Historia',
   2567: 'Cultura Popular',
   2565: 'Cultura Popular',
@@ -1584,7 +1585,10 @@ function renderMuseumsList(museos) {
         aria-label="${isVisited ? 'Quitar marca de visitado' : 'Marcar como visitado'}"
         title="${isVisited ? 'Quitar marca de visitado' : 'Marcar como visitado'}"
       >
-        <span data-visited-icon aria-hidden="true">${isVisited ? '✓' : '○'}</span>
+        <span data-visited-icon aria-hidden="true">${isVisited
+          ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-linecap="round" stroke-linejoin="round"><path fill-rule="evenodd" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>`
+          : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
+        }</span>
         <span data-visited-label>${isVisited ? 'Visitado' : 'Marcar visita'}</span>
       </button>`;
     const plannedButton = `
@@ -1641,11 +1645,7 @@ function renderMuseumsList(museos) {
                 <span class="badge-category-label">${escapeHtml(meta.icon)} ${category}</span>
                 <span class="badge-category-icon" aria-hidden="true">${escapeHtml(meta.icon)}</span>
               </span>
-              ${museo.esGratis ? `
-                <span class="badge badge-free" title="Gratis" aria-label="Gratis">
-                  <span class="badge-free-label">Gratis</span>
-                  <span class="badge-free-icon" aria-hidden="true">🆓</span>
-                </span>` : ''}
+
               ${distanceBadge}
             </div>
             <div class="card-marker-actions">
@@ -2039,7 +2039,9 @@ function updateVisitedButton(id) {
   const isVisited = AppState.visitedMuseums.has(id);
   DOM.btnToggleVisited.classList.toggle('active', isVisited);
   DOM.btnToggleVisited.setAttribute('aria-pressed', String(isVisited));
-  DOM.modalVisitIcon.textContent = isVisited ? '✓' : '○';
+  DOM.modalVisitIcon.innerHTML = isVisited
+    ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-linecap="round" stroke-linejoin="round"><path fill-rule="evenodd" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>`
+    : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
   DOM.modalVisitLabel.textContent = isVisited
     ? 'Ya visitaste este museo'
     : 'Marcar como visitado';
@@ -2052,7 +2054,9 @@ function updateVisitedButton(id) {
     const label = isVisited ? 'Quitar marca de visitado' : 'Marcar como visitado';
     cardButton.setAttribute('aria-label', label);
     cardButton.title = label;
-    cardButton.querySelector('[data-visited-icon]').textContent = isVisited ? '✓' : '○';
+    cardButton.querySelector('[data-visited-icon]').innerHTML = isVisited
+      ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-linecap="round" stroke-linejoin="round"><path fill-rule="evenodd" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>`
+      : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
     cardButton.querySelector('[data-visited-label]').textContent = isVisited
       ? 'Visitado'
       : 'Marcar visita';
