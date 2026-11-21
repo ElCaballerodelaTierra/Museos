@@ -569,5 +569,423 @@ const NOCHE_MUSEOS_DATA = [
       registration: 'Sin registro previo.',
       format: 'Presencial.'
     }
+  },
+  {
+    sicId: 2385,
+    event: {
+      title: "No Man's Land: Tributo a Nirvana",
+      image: 'data/noche-museos/museo-yancuic.jpg',
+      activities: 'Concierto tributo a Nirvana a cargo de la banda No Man\'s Land en el marco del 17.° Aniversario de Noche de Museos.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 17:00 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo: 280 personas.',
+      registration: 'Sin registro previo.',
+      contact: 'informacion.eventosyancuic@gmail.com',
+      format: 'Presencial.'
+    }
+  },
+  {
+    id: 'noche-casa-tlaxcala',
+    name: 'Casa Tlaxcala',
+    category: 'Cultura Popular',
+    alcaldia: 'Cuauhtémoc',
+    address: 'San Ildefonso 40, Barrio Universitario, Centro Histórico, Cuauhtémoc, C.P. 06020, Ciudad de México.',
+    coordinates: [19.435868, -99.130635],
+    event: {
+      title: 'Pastorela ¿Y si sí?',
+      image: 'data/noche-museos/casa-tlaxcala.jpg',
+      activities: 'Presentación teatral de la pastorela «¿Y si sí?» a cargo de Arteatro con dirección escénica de Rodolfo Palacios. Reparto: Esperanza Morett (Diablita), Enrique Cueva (Diablo), Salvador Medina (Dios), Alejandro Caballero (Melchor, Gaspar y Baltazar), Sergio Albarrán (Arcángel), Zuyva Eseverri (María) y Jaime Orozco (José). Actividad vinculada al acervo.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:30 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo máximo de 200 personas.',
+      registration: 'Sin registro previo.',
+      contact: 'reprecasatlaxcalacdmx@gmail.com | Tel. 55 5702 9620 / 55 5702 9686.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    museumId: 'el-carmen',
+    sicId: 963,
+    event: {
+      title: 'Noche mística: poesía de Santa Teresa y San Juan de la Cruz',
+      image: 'data/noche-museos/museo-el-carmen.jpg',
+      activities: 'Declamación poética mística de Santa Teresa de Jesús y San Juan de la Cruz a través de la voz de la virreina María Luisa Gonzaga Manrique de Lara (interpretada por Fátima Corona Candia). Posteriormente, micrófono abierto para que el público comparta sus versos favoritos o poemas de autoría propia.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:00 horas.',
+      admission: 'Entrada libre (actividad sin costo).',
+      capacity: 'Cupo máximo de 100 personas.',
+      registration: 'Registro previo mediante código QR.',
+      contact: 'museodelcarmen_difusion@inah.gob.mx',
+      format: 'Presencial.'
+    }
+  },
+  {
+    id: 'noche-centro-cultural-xavier-villaurrutia',
+    name: 'Centro Cultural Xavier Villaurrutia',
+    category: 'Arte',
+    alcaldia: 'Cuauhtémoc',
+    address: 'Glorieta de los Insurgentes, local 25, Roma Norte, Cuauhtémoc, Ciudad de México.',
+    coordinates: [19.423439, -99.163155],
+    event: {
+      title: 'Diarios de Habitación',
+      image: 'data/noche-museos/centro-cultural-xavier-villaurrutia.jpg',
+      activities: 'Puesta en escena con dirección de Nael de Anda que aborda la violencia intrafamiliar ejercida hacia una hija (Gris) y una madre sorda (Lucía), quienes buscan escapar de esa realidad a través de la música, el juego y la danza. La obra se desarrolla mediante Lengua de Señas Mexicana, danza, clown y teatro físico.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:00 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo limitado a 50 personas.',
+      registration: 'Sin registro previo.',
+      contact: 'culturacomunitaria.cdmx.gob.mx | Tel. 55 5533 5586.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    id: 'noche-academia-arte-florencia',
+    name: 'Academia de Arte de Florencia / Sociedad Dante Alighieri',
+    category: 'Arte',
+    alcaldia: 'Cuauhtémoc',
+    address: 'Marsella 39, Col. Juárez, Cuauhtémoc, C.P. 06600, Ciudad de México.',
+    coordinates: [19.426217, -99.157833],
+    event: {
+      title: '17.° Aniversario Noche de Museos: Arte, Música y Teatro',
+      image: 'data/noche-museos/academia-arte-florencia.jpg',
+      activities: 'Programa multidisciplinario en el Auditorio Aldo Cecchetti: 16:30 h, Exposición de Trabajos de Alumnos del Diplomado en Artes Visuales; 17:00 h, Clase Magistral «What Makes a Great Painting?» por Wade Schuman (New York Art Academy, requiere registro); 18:00 h, Conferencia de presentación de la nueva Licenciatura en Artes Visuales; 18:30 h, Experiencia escénica «El Peine» (laboratorio de poesía, música, filosofía y psicoanálisis; Dir. Mariana Villalobos); 19:30 h, Concierto coral «Fra Voci: Clásicos de la tradición coral».',
+      schedule: 'Miércoles 25 de noviembre de 2026, 16:30 a 20:30 horas.',
+      admission: 'Entrada libre (la clase magistral requiere registro previo obligatorio).',
+      capacity: 'Aforo máximo de 60 personas por actividad.',
+      registration: 'Registro previo obligatorio únicamente para la clase magistral.',
+      contact: 'contacto@academiaarteflorencia.com | WhatsApp: 55 6978 6300.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    museumId: 'map',
+    sicId: 1092,
+    event: {
+      title: 'GRACIAS - 20.° Aniversario del MAP',
+      image: 'data/noche-museos/museo-arte-popular.jpg',
+      activities: 'En el marco del 20.° aniversario del Museo de Arte Popular, visita guiada especial por la exposición temporal «GRACIAS» en compañía de reconocidos exponentes del arte popular mexicano: Adriana Villanueva, Amauri Sanabria, Emmanuel Bonilla e Irving Mondragón.',
+      schedule: 'Miércoles 25 de noviembre de 2026: registro 18:00 horas, inicio 18:30 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo para 60 personas.',
+      registration: 'Registro en el recinto a las 18:00 horas.',
+      contact: '55 5510 2201 | map.cdmx.gob.mx',
+      format: 'Presencial.'
+    }
+  },
+  {
+    id: 'noche-el77-centro-cultural',
+    name: 'El77 Centro Cultural Autogestivo',
+    category: 'Arte',
+    alcaldia: 'Cuauhtémoc',
+    address: 'Abraham González 77, Col. Juárez, Cuauhtémoc, C.P. 06600, Ciudad de México.',
+    coordinates: [19.428312, -99.153920],
+    event: {
+      title: 'Perritos en Resistencia & Flash Tatu',
+      image: 'data/noche-museos/el77-centro-cultural.jpg',
+      activities: 'Exposición de arte emergente «Perritos en Resistencia» y sesión de «Flash tatu x pajarotatu». Artistas participantes: Agueda Ponce, Artemis de plata, Clarividencia, Darel Didier, Juan0vich, Minna Blue, Nian, pajarotatu, perropsd, Tadeo Morales y Tlacui Ulle. Actividad vinculada al acervo.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:00 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo máximo de 50 personas.',
+      registration: 'Sin registro previo.',
+      contact: 'el77cultural@gmail.com | Tel. 55 5566 0102.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    id: 'noche-lago-algo',
+    name: 'LagoAlgo',
+    category: 'Arte',
+    alcaldia: 'Miguel Hidalgo',
+    address: 'Lago Mayor, II Sección del Bosque de Chapultepec, Miguel Hidalgo, C.P. 11100, Ciudad de México.',
+    coordinates: [19.414441, -99.198943],
+    event: {
+      title: 'Noche de Museos en LagoAlgo',
+      image: 'data/noche-museos/lago-algo.jpg',
+      activities: 'Recorridos guiados nocturnos por las exposiciones de arte contemporáneo y la icónica arquitectura de LagoAlgo en el Bosque de Chapultepec.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:00 a 20:30 horas (recorridos a las 19:00 y 19:30 horas).',
+      admission: 'Actividad presencial sin costo (entrada libre).',
+      capacity: 'Aforo de 1,000 personas.',
+      registration: 'Registro previo en lago-algo.as.me/nochedemuseos.',
+      contact: 'info@lago-algo.mx',
+      format: 'Presencial.'
+    }
+  },
+  {
+    id: 'noche-universidad-comunicacion',
+    name: 'Foro UC - Universidad de la Comunicación',
+    category: 'Arte',
+    alcaldia: 'Cuauhtémoc',
+    address: 'Calle Zacatecas 120, Col. Roma Norte, Cuauhtémoc, C.P. 06700, Ciudad de México.',
+    coordinates: [19.416805, -99.161041],
+    event: {
+      title: 'Pinta tu Frecuencia',
+      image: 'data/noche-museos/universidad-comunicacion.jpg',
+      activities: 'Taller de creación visual con música electrónica e instalación colectiva temporal desarrollado por L&S Proyectos. Incluye set en vivo de música electrónica con Marash DJ, taller de pintura de mandalas y exploración del significado de los colores.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 19:00 a 21:00 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Aforo máximo de 200 personas.',
+      registration: 'Registro previo al correo ucnochedemuseos@gmail.com.',
+      contact: 'Informes por WhatsApp: 55 4913 5206.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    museumId: 'museo-historia-tlalpan',
+    sicId: 546,
+    event: {
+      title: 'Chulas, Cholas y Chingonas',
+      image: 'data/noche-museos/museo-historia-tlalpan.jpg',
+      activities: 'Exhibición de motonetas clásicas Vespa y sesión de Vinyl Set con las DJs y selectores Karen (PizzaN\'roll) b2b Rita (Llamas Negras Discos), Cari flowers, Bunny Sue y Julissa Ellis.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:30 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Aforo máximo de 200 personas.',
+      registration: 'Sin registro previo.',
+      contact: 'Tel. 55 5483 1500 ext. 7300 | tlalpan.cdmx.gob.mx.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    sicId: 2502,
+    event: {
+      title: 'Simi Christmas: Navidad en SimiCasa',
+      image: 'data/noche-museos/simicasa-museo.jpg',
+      activities: 'Celebración navideña en SimiCasa: encendido del árbol para inaugurar la temporada, buzón para Cartas a SimiClaus, villancicos clásicos interpretados desde el balcón, cuentos de Navidad y photo opportunity temático. ¡Ponte tu mejor outfit navideño!',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:00 a 23:00 horas.',
+      admission: 'Entrada general: $130 MXN. Personas con discapacidad, adultos mayores, estudiantes y niños: $65 MXN.',
+      capacity: 'Aforo: 350 personas por hora.',
+      contact: 'contacto@simicasa.com | Tel. 56 5108 1402.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    id: 'noche-quinta-colorada',
+    name: 'Quinta Colorada',
+    category: 'Historia',
+    alcaldia: 'Miguel Hidalgo',
+    address: 'Bosque de Chapultepec 1.ª Sección (Acceso peatonal 4, cerca del Mercado de Flores), San Miguel Chapultepec, Miguel Hidalgo, C.P. 11850, Ciudad de México.',
+    coordinates: [19.418306, -99.186639],
+    event: {
+      title: 'Vasoterapia y Concierto de Omniblues',
+      image: 'data/noche-museos/quinta-colorada.jpg',
+      activities: 'Doble jornada cultural: a las 17:00 h en la Explanada, «Vasoterapia: Conversatorio, Juegos & Picnic» para interactuar y reflexionar de manera lúdica; a las 19:00 h en el Auditorio, concierto de blues mexicano «Al morir la tarde en Chapultepec» con la banda Omniblues.',
+      schedule: 'Miércoles 25 de noviembre de 2026: Vasoterapia 17:00 h (Explanada); Omniblues 19:00 h (Auditorio).',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo limitado a 200 personas.',
+      registration: 'Sin registro previo.',
+      contact: 'Informes: museodesitiobch@gmail.com',
+      format: 'Presencial.'
+    }
+  },
+  {
+    museumId: 'soumaya-carso',
+    sicId: 1478,
+    event: {
+      title: 'Noche de Museos en Museo Soumaya Plaza Carso',
+      image: 'data/noche-museos/museo-soumaya.jpg',
+      activities: 'Horario extendido hasta las 22:00 h. Programa especial: 17:00 a 20:00 h, «Breves fueron mis palabras» (poesía, narrativa o ensayo con intercambio de libros); 17:00, 18:00 y 20:00 h, «Visita táctil» (percibe el arte a ojos cerrados con las manos, cupo 10 personas); 19:00 h, concierto «Alientos mexicanos» de música contemporánea a cargo de Ensamble Danaus (cupo 310 personas).',
+      schedule: 'Miércoles 25 de noviembre de 2026, 17:00 a 22:00 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Concierto: 310 personas; Visita táctil: 10 personas por turno.',
+      registration: 'Sin registro previo (cupo limitado por actividad).',
+      contact: 'Tel. 55 1103 9800 | @ElMuseoSoumaya.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    museumId: 'tovar-teresa',
+    sicId: 2069,
+    event: {
+      title: 'Noche de Museos en Casa Guillermo Tovar de Teresa',
+      image: 'data/noche-museos/museo-soumaya.jpg',
+      activities: 'A 11 años de su partida, recorre la residencia virreinal y porfiriana del Cronista Emérito de la Ciudad de México, hoy habitada por belleza y colecciones de arte novohispano.',
+      schedule: 'Miércoles 25 de noviembre de 2026, horario extendido hasta las 22:00 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Aforo regular del recinto.',
+      registration: 'Sin registro previo.',
+      contact: 'Tel. 55 1103 9800 | @ElMuseoSoumaya.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    id: 'noche-soumaya-atrio-san-francisco',
+    name: 'Museo Soumaya - Atrio de San Francisco',
+    category: 'Arte',
+    alcaldia: 'Cuauhtémoc',
+    address: 'Francisco I. Madero 7, Centro Histórico, Cuauhtémoc, C.P. 06000, Ciudad de México.',
+    coordinates: [19.433917, -99.140222],
+    event: {
+      title: 'Noche de Museos en Atrio de San Francisco',
+      image: 'data/noche-museos/museo-soumaya.jpg',
+      activities: 'Horario extendido para disfrutar la naturaleza, jardines y contemplar la diversidad arquitectónica en el corazón del Centro Histórico.',
+      schedule: 'Miércoles 25 de noviembre de 2026, horario extendido hasta las 22:00 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Aforo libre del espacio.',
+      registration: 'Sin registro previo.',
+      contact: 'Tel. 55 1103 9800 | @ElMuseoSoumaya.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    id: 'noche-casul-unam',
+    name: 'Casa Universitaria del Libro (CASUL - UNAM)',
+    category: 'Cultura Popular',
+    alcaldia: 'Cuauhtémoc',
+    address: 'Orizaba 24, Roma Norte, Cuauhtémoc, C.P. 06700, Ciudad de México.',
+    coordinates: [19.421522, -99.158739],
+    event: {
+      title: 'Cineclub CASUL: El Cadáver de la Novia',
+      image: 'data/noche-museos/casul-unam.jpg',
+      activities: 'Proyección cinematográfica de la aclamada película animada «El Cadáver de la Novia» (Dirs. Tim Burton y Mike Johnson, 2005) en colaboración con Filmoteca UNAM.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:00 horas.',
+      admission: 'Entrada libre con fines exclusivamente académicos.',
+      capacity: 'Cupo: 40 personas.',
+      registration: 'Sin registro previo.',
+      contact: '55 5525 0550 ext. 103 y 104 | actividades.casul@gmail.com | www.casul.unam.mx.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    museumId: 'palacio-correos',
+    sicId: 689,
+    event: {
+      title: 'JAZZBOOK 14 Mujeres: Jenny Beaujean y Nadia López',
+      image: 'data/noche-museos/palacio-postal.jpg',
+      activities: 'Concierto estelar del festival JAZZBOOK 14 Mujeres en el Palacio Postal: sesión de jazz a cargo de Jenny Beaujean fusionada con la poesía en voz de Nadia López.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:00 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Aforo: 120 personas.',
+      registration: 'Sin registro previo.',
+      contact: 'palacio.postal.museo | elfondoonlinea.com | elconvite.com.mx.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    museumId: 'san-ildefonso',
+    sicId: 768,
+    event: {
+      title: 'Proyecto de práctica social: REMIENDOS',
+      image: 'data/noche-museos/colegio-san-ildefonso.jpg',
+      activities: 'Proyecto de práctica social «REMIENDOS» con la participación de Lorena Wolffer y Erika Lozano (Kuru), incluyendo proyección sobre la calle peatonal de San Ildefonso.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 19:00 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Aforo: 90 personas.',
+      registration: 'Sin registro previo.',
+      contact: 'acsiedu@gmail.com | Tel. 55 3602 0028.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    id: 'noche-instituto-cultural-tlalnepantla',
+    name: 'Instituto Municipal de Cultura y Arte Comunitario (Tlalnepantla)',
+    category: 'Arte',
+    alcaldia: 'Tlalnepantla de Baz',
+    address: 'Plaza Dr. Gustavo Baz Prada s/n, Centro, Tlalnepantla de Baz, C.P. 54000, Estado de México.',
+    coordinates: [19.539650, -99.195033],
+    event: {
+      title: 'Taller de grabado sin prensa: Huella Mágica',
+      image: 'data/noche-museos/instituto-cultural-tlalnepantla.jpg',
+      activities: 'Taller práctico de grabado sin prensa «Huella Mágica» para crear arte con tus propias manos y llevarte tus obras a casa (incluye todo el material). Imparten la Mtra. Tania Mendoza Soto y el Mtro. José Antonio Cano Hernández (segundo piso del recinto).',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:30 horas.',
+      admission: 'Sin costo (incluye todo el material).',
+      capacity: 'Cupo limitado a 20 personas.',
+      registration: 'Reserva vía WhatsApp: 55 4928 2993.',
+      contact: 'WhatsApp: 55 4928 2993 | FB: Instituto Municipal Cultura y Arte Comunitario.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    id: 'noche-centro-cultural-jaime-torres-bodet',
+    name: 'Centro Cultural Jaime Torres Bodet (IPN Zacatenco)',
+    category: 'Ciencia',
+    alcaldia: 'Gustavo A. Madero',
+    address: 'Av. Wilfrido Massieu s/n, esq. Av. IPN, Zacatenco, Gustavo A. Madero, C.P. 07738, Ciudad de México.',
+    coordinates: [19.500344, -99.135211],
+    event: {
+      title: 'Ponencia: Violencias y resistencias de las mujeres musulmanas',
+      image: 'data/noche-museos/centro-cultural-jaime-torres-bodet.jpg',
+      activities: 'Ponencia a cargo de la Dra. Samantha Leyva Cortés en el marco de las actividades por los 16 días de activismo contra la violencia hacia la mujer (proyección en Pantalla LED del Auditorio Ing. Alejo Peralta).',
+      schedule: 'Miércoles 25 de noviembre de 2026, 17:00 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo máximo: 50 personas.',
+      registration: 'No requiere registro.',
+      contact: 'ddc@ipn.mx | Tel. 55 5729 6000 exts. 53675 / 53623 | ipn.mx/cultura/.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    id: 'noche-casa-primera-imprenta',
+    name: 'Casa de la Primera Imprenta de América (UAM)',
+    category: 'Historia',
+    alcaldia: 'Cuauhtémoc',
+    address: 'Lic. Primo de Verdad 10, Centro Histórico, Cuauhtémoc, C.P. 06060, Ciudad de México.',
+    coordinates: [19.434444, -99.130389],
+    event: {
+      title: 'Colectivo Ajá (Agua): Memorial y Ritualidad (Ausencia/Presencia)',
+      image: 'data/noche-museos/casa-primera-imprenta.jpg',
+      activities: 'Presentación artística, ceremonial y de memoria comunitaria a cargo del Colectivo Ajá (Agua) explorando las nociones de ausencia y presencia.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:00 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Aforo máximo: 45 personas.',
+      registration: 'Sin registro previo.',
+      contact: 'casapimprenta@correo.uam.mx | @casaprimeraimprenta.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    museumId: 'culturas-mundo',
+    sicId: 802,
+    event: {
+      title: 'Generaciones Marcadas: Poesía, música y performance sobre Palestina',
+      image: 'data/noche-museos/museo-culturas-del-mundo.jpg',
+      activities: 'Ensamble de poesía, música y performance sobre la historia y lucha del pueblo palestino en la Sala Eusebio Dávalos, en el marco del Día Internacional de Solidaridad con el Pueblo Palestino.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 19:00 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo: 100 personas.',
+      registration: 'Sin registro previo.',
+      contact: 'difusion.mnc@inah.gob.mx | @MuseoCulturasdelMundo.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    museumId: 'archivo-fotografia',
+    sicId: 1109,
+    event: {
+      title: 'Charla: 25N Desbordar los márgenes',
+      image: 'data/noche-museos/museo-archivo-fotografia.jpg',
+      activities: 'Charla y conversatorio «25N Desbordar los márgenes: Mujeres, infancias y el arte como resistencia desde las prácticas artísticas». Participan: Valeria Castillón, Alejandra Ruiz Rincón, Michelle Ayala y Janet Gómez Valdés.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 18:30 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Aforo máximo: 70 personas.',
+      registration: 'Sin registro previo.',
+      contact: 'consulta.acervomaf@gmail.com | @mafmuseo.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    museumId: 'culturas-populares',
+    sicId: 976,
+    event: {
+      title: 'Concierto: Orquesta Ensueño y parejas de charros y charras',
+      image: 'data/noche-museos/museo-culturas-populares.jpg',
+      activities: 'Gran concierto tradicional mexicano con la Orquesta Ensueño acompañada por parejas de baile folclórico de charros y charras.',
+      schedule: 'Miércoles 25 de noviembre de 2026, 19:00 horas.',
+      admission: 'Entrada libre.',
+      capacity: 'Cupo: 200 personas.',
+      registration: 'Sin registro previo.',
+      contact: 'eacamarenag@cultura.gob.mx | mncp.cultura.gob.mx | @MuseoNacionaldeCulturasPopulares.',
+      format: 'Presencial.'
+    }
+  },
+  {
+    sicId: 2526,
+    event: {
+      title: 'La noche sabe a chocolate: Choco-Story Zócalo',
+      image: 'data/noche-museos/choco-story-zocalo.jpg',
+      activities: 'Recorrido sensorial para conocer, aprender y disfrutar el fascinante mundo del cacao y el chocolate (incluye audioguía, degustación de chocolate y demostración de chocolate relleno). Además, actividades especiales con costo de $250 c/u: Catas de chocolate (17, 18, 19 y 20 h, cupo 25), Taller de chocolate con diseños navideños (17, 18, 19 y 20 h, cupo 20) y Taller artesanal en metate (17, 18, 19 y 20 h, cupo 6).',
+      schedule: 'Miércoles 25 de noviembre de 2026, 17:00 a 21:00 horas.',
+      admission: 'Entrada general: $90 MXN (incluye audioguía, degustación y demostración). Talleres y catas especiales: $250 MXN c/u.',
+      capacity: 'Aforo general continuo; catas y talleres con cupo limitado de 6 a 25 personas por turno.',
+      contact: '55 5518 8312 | www.choco-storymexico.com/zocalo | @chocostory.zocalo.',
+      format: 'Presencial.'
+    }
   }
 ];
