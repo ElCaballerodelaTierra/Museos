@@ -238,7 +238,7 @@ function initDOMReferences() {
   DOM.layerDropdown = document.getElementById('layerDropdown');
   DOM.mobileViewToggle = document.getElementById('mobileViewToggle');
   DOM.toast = document.getElementById('toastNotification');
-  
+
   // Modal DOM
   DOM.modal = document.getElementById('museumModal');
   DOM.closeModalBtn = document.getElementById('closeModalBtn');
@@ -533,8 +533,8 @@ async function handleAccountSignIn(event) {
   if (!AccountSync.client) return;
 
   if (window.location.protocol !== 'https:' &&
-      !(window.location.protocol === 'http:' &&
-        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))) {
+    !(window.location.protocol === 'http:' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))) {
     setAccountStatus('Abre la aplicación desde localhost o un sitio HTTPS para iniciar sesión.', 'error');
     return;
   }
@@ -905,7 +905,7 @@ function updateLayerOptions() {
  */
 function initData() {
   if (typeof SIC_MUSEOS_DATA !== 'undefined' && Array.isArray(SIC_MUSEOS_DATA) &&
-      typeof MUSEOS_DATA !== 'undefined' && Array.isArray(MUSEOS_DATA)) {
+    typeof MUSEOS_DATA !== 'undefined' && Array.isArray(MUSEOS_DATA)) {
     const curatedBySicId = new Map();
     Object.entries(SIC_IMAGE_IDS).forEach(([museumId, sicId]) => {
       const curated = MUSEOS_DATA.find(m => m.id === museumId);
@@ -1161,6 +1161,49 @@ function initEventHandlers() {
     collectionMenuBreakpoint.addListener(handleCollectionMenuBreakpointChange);
   }
 
+  // ── Corrección de orientación en iOS / Firefox móvil ────────────────────
+  // Al rotar de landscape a portrait, iOS Safari no actualiza 100vh ni el
+  // layout del body. Forzamos un re-render completo del mapa y, si el sidebar
+  // estaba oculto por la vista de mapa en portrait, lo restauramos al estado
+  // correcto para que el header sea siempre visible.
+  let _lastOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+
+  const handleOrientationChange = () => {
+    // Dar tiempo al browser para que actualice innerWidth/innerHeight
+    setTimeout(() => {
+      const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+      const isMobileWidth = window.innerWidth <= 900;
+
+      if (AppState.map) {
+        AppState.map.invalidateSize({ animate: false });
+      }
+
+      // Si rotamos DE landscape A portrait en ancho móvil:
+      // el sidebar debe ser visible para que el header sea accesible.
+      if (_lastOrientation === 'landscape' && currentOrientation === 'portrait' && isMobileWidth) {
+        // Restaurar vista lista (sidebar visible) para que el header aparezca.
+        document.body.classList.remove('view-map');
+        document.body.classList.add('view-sidebar');
+        document.querySelectorAll('.toggle-btn').forEach(b => {
+          b.classList.toggle('active', b.dataset.view === 'list');
+        });
+        // El mapa necesita otro invalidateSize después del re-layout del sidebar.
+        setTimeout(() => {
+          if (AppState.map) AppState.map.invalidateSize({ animate: false });
+        }, 400);
+      }
+
+      _lastOrientation = currentOrientation;
+    }, 150);
+  };
+
+  // screen.orientation es más confiable que el evento 'resize' solo
+  if (screen.orientation) {
+    screen.orientation.addEventListener('change', handleOrientationChange);
+  }
+  // Fallback: 'resize' cubre Firefox, iOS Safari y Android WebView
+  window.addEventListener('resize', handleOrientationChange, { passive: true });
+
   // Búsqueda de texto instantánea
   DOM.searchInput.addEventListener('input', (e) => {
     AppState.searchQuery = e.target.value.trim().toLowerCase();
@@ -1301,7 +1344,7 @@ function initEventHandlers() {
   DOM.layerDropdown.addEventListener('click', (e) => {
     const opt = e.target.closest('.layer-option');
     if (!opt) return;
-    
+
     const layerKey = opt.dataset.layer;
     if (AppState.baseTileLayers[layerKey]) {
       setBaseLayer(layerKey);
@@ -1313,11 +1356,11 @@ function initEventHandlers() {
   DOM.mobileViewToggle.addEventListener('click', (e) => {
     const btn = e.target.closest('.toggle-btn');
     if (!btn) return;
-    
+
     const view = btn.dataset.view;
     document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    
+
     if (view === 'map') {
       document.body.classList.add('view-map');
       document.body.classList.remove('view-sidebar');
@@ -1418,8 +1461,8 @@ function applyFiltersAndRender() {
     if (normQuery) {
       const sicSearchText = museo.sicInfo
         ? Object.values(museo.sicInfo)
-            .map(value => Array.isArray(value) ? value.join(' ') : String(value || ''))
-            .join(' ')
+          .map(value => Array.isArray(value) ? value.join(' ') : String(value || ''))
+          .join(' ')
         : '';
       const eventSearchText = museo.nocheMuseos && AppState.showOnlyNocheMuseos
         ? Object.values(museo.nocheMuseos).join(' ')
@@ -1526,8 +1569,8 @@ function renderMapMarkers(museos) {
  */
 function buildPopupContent(museo) {
   const meta = CATEGORY_META[museo.categoria] || { color: '#64748b' };
-  const freeBadgeHtml = museo.esGratis 
-    ? `<span class="badge badge-free">Entrada Libre</span>` 
+  const freeBadgeHtml = museo.esGratis
+    ? `<span class="badge badge-free">Entrada Libre</span>`
     : '';
   const eventPoster = AppState.showOnlyNocheMuseos && museo.nocheMuseos && museo.nocheMuseos.image;
   const image = escapeHtml(eventPoster || museo.imagen);
@@ -1657,8 +1700,8 @@ function renderMuseumsList(museos) {
     card.dataset.id = museo.id;
 
     // Distancia formateada si existe geolocalización
-    const distanceBadge = museo.distance !== null 
-      ? `<span class="badge-distance">📍 ${museo.distance < 1 ? Math.round(museo.distance * 1000) + ' m' : museo.distance.toFixed(1) + ' km'}</span>` 
+    const distanceBadge = museo.distance !== null
+      ? `<span class="badge-distance">📍 ${museo.distance < 1 ? Math.round(museo.distance * 1000) + ' m' : museo.distance.toFixed(1) + ' km'}</span>`
       : '';
     const visitedButton = `
       <button
@@ -1670,9 +1713,9 @@ function renderMuseumsList(museos) {
         title="${isVisited ? 'Quitar marca de visitado' : 'Marcar como visitado'}"
       >
         <span data-visited-icon aria-hidden="true">${isVisited
-          ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-linecap="round" stroke-linejoin="round"><path fill-rule="evenodd" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>`
-          : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
-        }</span>
+        ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-linecap="round" stroke-linejoin="round"><path fill-rule="evenodd" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>`
+        : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
+      }</span>
         <span data-visited-label>${isVisited ? 'Visitado' : 'Marcar visita'}</span>
       </button>`;
     const plannedButton = `
@@ -2405,9 +2448,9 @@ function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Radio de la Tierra en km
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
+  const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;

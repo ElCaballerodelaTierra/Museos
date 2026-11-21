@@ -286,6 +286,7 @@ html, body {
   width: min(420px, calc(100vw - 2rem));
   max-width: calc(100vw - 2rem);
   max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
   margin: auto;
   padding: 1.5rem;
   overflow-y: auto;
@@ -399,6 +400,7 @@ html, body {
 .app-container {
   display: flex;
   height: calc(100vh - 68px);
+  height: calc(100dvh - 68px);
   width: 100%;
   position: relative;
 }
@@ -1663,6 +1665,7 @@ body.dark-map .leaflet-container {
 
   .app-container {
     height: calc(100vh - 60px);
+    height: calc(100dvh - 60px);
     position: relative;
   }
 
@@ -1908,6 +1911,7 @@ body.dark-map .leaflet-container {
   .app-container {
     display: flex;
     height: calc(100vh - 60px);
+    height: calc(100dvh - 60px);
   }
 
   .sidebar {
