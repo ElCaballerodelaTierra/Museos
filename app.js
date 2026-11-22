@@ -1605,7 +1605,7 @@ function buildPopupContent(museo) {
           </button>
           <button class="popup-marker-btn ${isPlanned ? 'is-active' : ''}" type="button" data-popup-marker-action="planned" aria-pressed="${isPlanned}" title="${isPlanned ? 'Quitar de Por visitar' : 'Añadir a Por visitar'}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="${isPlanned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4V4.75Z"></path></svg>
-            <span>Más tarde</span>
+            <span>Por visitar</span>
           </button>
         </div>
         <div class="popup-actions">
